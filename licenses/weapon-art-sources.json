@@ -1,0 +1,32 @@
+{
+  "weapon/49993": {
+    "name": "Petrified Lance",
+    "page": "https://mhgen.kiranico.com/lance/petrified-lance",
+    "image": "https://cdn.kiranico.net/file/kiranico/mhgen-web/assets/game/image/lan111_render.png"
+  },
+  "weapon/4be0a": {
+    "name": "Iron Lance",
+    "page": "https://mhgen.kiranico.com/lance/iron-lance",
+    "image": "https://cdn.kiranico.net/file/kiranico/mhgen-web/assets/game/image/lan1_render.png"
+  },
+  "weapon/47567": {
+    "name": "Naag Serpentblade",
+    "page": "https://mhgen.kiranico.com/lance/naag-serpentblade",
+    "image": "https://cdn.kiranico.net/file/kiranico/mhgen-web/assets/game/image/lan153_render.png"
+  },
+  "weapon/4eaa5": {
+    "name": "Cross Coloris",
+    "page": "https://mhgen.kiranico.com/lance/cross-coloris",
+    "image": "https://cdn.kiranico.net/file/kiranico/mhgen-web/assets/game/image/lan113_render.png"
+  },
+  "weapon/4077d": {
+    "name": "Twistcrawl",
+    "page": "https://mhgen.kiranico.com/lance/twistcrawl",
+    "image": "https://cdn.kiranico.net/file/kiranico/mhgen-web/assets/game/image/lan10_render.png"
+  },
+  "weapon/46aa6": {
+    "name": "Obsidian Lance",
+    "page": "https://mhgen.kiranico.com/lance/obsidian-lance",
+    "image": "https://cdn.kiranico.net/file/kiranico/mhgen-web/assets/game/image/lan112_render.png"
+  }
+}

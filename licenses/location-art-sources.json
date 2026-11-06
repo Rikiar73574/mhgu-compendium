@@ -1,0 +1,117 @@
+{
+  "Ancestral Steppe": {
+    "id": 11,
+    "page": "https://monsterhunterwiki.org/wiki/Ancestral_Steppe",
+    "image": "https://monsterhunterwiki.org/images/e/e5/MH4-Ancestral_Steppe_Screenshot_001.jpg"
+  },
+  "Arctic Ridge": {
+    "id": 3,
+    "page": "https://monsterhunterwiki.org/wiki/Arctic_Ridge",
+    "image": "https://monsterhunterwiki.org/images/f/f8/2ndGen-Snowy_Mountains_Screenshot_001.webp"
+  },
+  "Arctic Ridge (N)": {
+    "id": 103,
+    "page": "https://monsterhunterwiki.org/wiki/Arctic_Ridge",
+    "image": "https://monsterhunterwiki.org/images/f/f8/2ndGen-Snowy_Mountains_Screenshot_001.webp"
+  },
+  "Arena": null,
+  "Castle Schrade": {
+    "id": 25,
+    "page": "https://monsterhunterwiki.org/wiki/MHGU/Locations",
+    "image": "https://monsterhunterwiki.org/images/b/bb/MH4-Castle_Schrade_%284th%29_Screenshot_001.jpg"
+  },
+  "Desert": {
+    "id": 22,
+    "page": "https://monsterhunterwiki.org/wiki/MHGU/Locations",
+    "image": "https://monsterhunterwiki.org/images/6/6c/2ndGen-Desert_Screenshot_001.webp"
+  },
+  "Deserted Island": {
+    "id": 6,
+    "page": "https://monsterhunterwiki.org/wiki/Deserted_Island",
+    "image": "https://monsterhunterwiki.org/images/3/3b/MHGen-Deserted_Island_Screenshot_001.jpg"
+  },
+  "Dunes": {
+    "id": 5,
+    "page": "https://monsterhunterwiki.org/wiki/Dunes",
+    "image": "https://monsterhunterwiki.org/images/0/05/2ndGen-Old_Desert_Screenshot_001.webp"
+  },
+  "F. Slayground": null,
+  "Forlorn Arena": null,
+  "Forlorn Citadel": null,
+  "Fortress": "HTTPSConnectionPool(host='monsterhunterwiki.org', port=443): Read timed out. (read timeout=25)",
+  "Frozen Seaway": {
+    "id": 14,
+    "page": "https://monsterhunterwiki.org/wiki/Frozen_Seaway",
+    "image": "https://monsterhunterwiki.org/images/e/e7/MH4-Frozen_Seaway_Screenshot_001.jpg"
+  },
+  "Ingle Isle": null,
+  "Jungle": {
+    "id": 23,
+    "page": "https://monsterhunterwiki.org/wiki/MHGU/Locations",
+    "image": "https://monsterhunterwiki.org/images/f/fd/2ndGen-Jungle_Screenshot_001.webp"
+  },
+  "Jurassic Frontier": {
+    "id": 1,
+    "page": "https://monsterhunterwiki.org/wiki/Jurassic_Frontier",
+    "image": "https://monsterhunterwiki.org/images/5/5c/MHGU-Jurassic_Frontier_Screenshot_001.webp"
+  },
+  "Jurassic Frontier (N)": {
+    "id": 101,
+    "page": "https://monsterhunterwiki.org/wiki/Jurassic_Frontier",
+    "image": "https://monsterhunterwiki.org/images/5/5c/MHGU-Jurassic_Frontier_Screenshot_001.webp"
+  },
+  "Marshlands": {
+    "id": 7,
+    "page": "https://monsterhunterwiki.org/wiki/Marshlands",
+    "image": "https://monsterhunterwiki.org/images/c/c8/2ndGen-Swamp_Screenshot_001.webp"
+  },
+  "Misty Peaks": {
+    "id": 4,
+    "page": "https://monsterhunterwiki.org/wiki/Misty_Peaks",
+    "image": "https://monsterhunterwiki.org/images/9/95/MHGU-Misty_Peaks_Screenshot_001.webp"
+  },
+  "Misty Peaks (N)": {
+    "id": 104,
+    "page": "https://monsterhunterwiki.org/wiki/Misty_Peaks",
+    "image": "https://monsterhunterwiki.org/images/9/95/MHGU-Misty_Peaks_Screenshot_001.webp"
+  },
+  "Polar Field": null,
+  "Primal Forest": {
+    "id": 13,
+    "page": "https://monsterhunterwiki.org/wiki/Primal_Forest",
+    "image": "https://monsterhunterwiki.org/images/6/64/MH4U-Primal_Forest_Screenshot_001.webp"
+  },
+  "Ruined Pinnacle": {
+    "id": 24,
+    "page": "https://monsterhunterwiki.org/wiki/Ruined_Pinnacle",
+    "image": "https://monsterhunterwiki.org/images/c/c7/MHGU-Ruined_Pinnacle_Screenshot_001.webp"
+  },
+  "Sacred Pinnacle": null,
+  "Sanctuary": {
+    "id": 16,
+    "page": "https://monsterhunterwiki.org/wiki/Sanctuary",
+    "image": "https://monsterhunterwiki.org/images/e/e9/MH4U-Sanctuary-Zone_1_Screenshot_001.png"
+  },
+  "V. Slayground": null,
+  "Verdant Hills": {
+    "id": 2,
+    "page": "https://monsterhunterwiki.org/wiki/Verdant_Hills",
+    "image": "https://monsterhunterwiki.org/images/b/b0/2ndGen-Forest_and_Hills_Screenshot_001.webp"
+  },
+  "Verdant Hills (N)": {
+    "id": 102,
+    "page": "https://monsterhunterwiki.org/wiki/Verdant_Hills",
+    "image": "https://monsterhunterwiki.org/images/b/b0/2ndGen-Forest_and_Hills_Screenshot_001.webp"
+  },
+  "Volcanic Hollow": {
+    "id": 12,
+    "page": "https://monsterhunterwiki.org/wiki/Volcanic_Hollow",
+    "image": "https://monsterhunterwiki.org/images/4/4f/MH4-Volcanic_Hollow_Screenshot_001.jpg"
+  },
+  "Volcano": {
+    "id": 8,
+    "page": "https://monsterhunterwiki.org/wiki/File:MHGen-Volcano_Screenshot_001.jpg",
+    "image": "https://monsterhunterwiki.org/images/4/40/MHGen-Volcano_Screenshot_001.jpg"
+  },
+  "Wyvern's End": null
+}

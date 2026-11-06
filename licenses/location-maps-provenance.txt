@@ -1,0 +1,7 @@
+Minimap textures extracted locally from the user's MHGU installation:
+nativeNX/eng/GUI/99_texture/map/HD_map_01dn_BM_NOMIP.tex through HD_map_27dn_BM_NOMIP.tex.
+Original game graphics copyright CAPCOM. PNG conversion: tools/extract_map_pngs.py.
+TEX field definitions checked against Silvris/MH-Tools-and-Scripts Noesis tex_mtFramework_tex.py.
+Tegra GOB layout checked against the recomp runtime/nvn/tegra.c.
+Database location IDs 1-27 correspond to these game map numbers;
+night location IDs 101-104 reuse maps 1-4.

@@ -1,0 +1,87 @@
+#![no_std]
+mod quick_map;mod inventory;mod wishlist;mod native_hint;mod smithy;mod item;mod item_data { include!(concat!(env!("OUT_DIR"),"/item_data.rs")); }mod ui_art;mod ui_pixels { include!(concat!(env!("OUT_DIR"),"/ui_pixels.rs")); }mod weapon;mod weapon_data { include!(concat!(env!("OUT_DIR"),"/weapon_data.rs")); }mod map_art;mod map_pixels { include!(concat!(env!("OUT_DIR"),"/map_pixels.rs")); }mod layout;mod desktop;mod control;mod input;mod catalog { include!(concat!(env!("OUT_DIR"),"/catalog.rs")); }mod world { include!(concat!(env!("OUT_DIR"),"/world.rs")); }mod context;mod view;
+use core::{cell::UnsafeCell,fmt::{self,Write}};
+use forge::{imgui,input::{Input,Button}};
+pub struct Entry{pub name:&'static str,pub search:&'static str,pub kind:u8,pub body:&'static str,pub links:&'static [(usize,&'static str)]}
+struct Local<T>(UnsafeCell<T>);unsafe impl<T> Sync for Local<T>{}
+#[derive(Clone,Copy)]struct DetailState{entry:usize,node:usize,recipe:usize,link:usize,tree:bool,entered:bool}
+const EMPTY_DETAIL:DetailState=DetailState{entry:usize::MAX,node:usize::MAX,recipe:0,link:0,tree:false,entered:false};
+struct Ui{wish_material:usize,quick_map:bool,results:[u16;12000],count:usize,dirty:bool,tab:u8,item_category:i16,selected:usize,detail:usize,scroll:usize,link:usize,query:[u8;48],len:usize,typing:bool,key:usize,last:u32,repeat:f32,scroll_timer:f32,detail_node:usize,recipe:usize,tree_focus:bool,panel_entered:bool,history:[DetailState;24],depth:usize,was_open:bool,weapon:i16,location:i16,rank:u8,zone:usize,zones:[u8;32],zone_count:usize,current:Option<usize>,pc_search:bool,touch_held:bool}
+static UI:Local<Ui>=Local(UnsafeCell::new(Ui{wish_material:0,quick_map:false,results:[0;12000],count:0,dirty:true,tab:0,item_category:-1,selected:0,detail:usize::MAX,scroll:0,link:0,query:[0;48],len:0,typing:false,key:0,last:0,repeat:0.0,scroll_timer:0.0,detail_node:usize::MAX,recipe:0,tree_focus:false,panel_entered:false,history:[EMPTY_DETAIL;24],depth:0,was_open:false,weapon:-1,location:-1,rank:0,zone:0,zones:[0;32],zone_count:0,current:None,pc_search:false,touch_held:false}));
+const KEYS:&[u8]=b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -";
+struct Text{bytes:[u8;256],len:usize}
+impl Text{fn new()->Self{Self{bytes:[0;256],len:0}}fn str(&self)->&str{core::str::from_utf8(&self.bytes[..self.len]).unwrap_or("")}}
+impl Write for Text{fn write_str(&mut self,s:&str)->fmt::Result{let mut n=s.len().min(256-self.len);while !s.is_char_boundary(n){n-=1;}self.bytes[self.len..self.len+n].copy_from_slice(&s.as_bytes()[..n]);self.len+=n;Ok(())}}
+#[unsafe(no_mangle)]pub extern "C" fn forge_onLoad(p:*mut forge::sys::init::PluginInitParams){unsafe{(*p).required_version=forge::REQUIRED_VERSION;let n=b"Hunter's Compendium\0";core::ptr::copy_nonoverlapping(n.as_ptr(),(p as *mut u8).add(6),n.len());}}
+#[unsafe(no_mangle)]pub extern "C" fn forge_onInit(){let _=forge::log::init();if input::install(){native_hint::install();smithy::install();forge::log::prelude::info!("Compendium 0.2 ready: Items / Weapon trees / Locations");}else{forge::log::prelude::error!("Compendium disabled: HID imports incompatible");}}
+fn query_match(s:&str,u:&Ui)->bool{let mut q=[0;48];let mut n=0;for b in &u.query[..u.len]{if b.is_ascii_alphanumeric(){q[n]=b.to_ascii_lowercase();n+=1;}}if n==0{return true;}let mut hay=Text::new();for c in s.chars(){if c.is_ascii_alphanumeric(){let _=write!(hay,"{}",c.to_ascii_lowercase());}}hay.str().contains(core::str::from_utf8(&q[..n]).unwrap_or(""))}
+fn location_available(id:usize,rank:u8)->bool{
+ // These encounter arenas are excluded from the gathering browser.
+ if matches!(world::LOCATIONS[id].name,"Forlorn Arena"|"Wyvern's End"|"Sanctuary"){return false;}
+ world::QUESTS.iter().any(|&(_,loc,r)|loc as usize==id&&r==rank)&&world::GATHER.iter().any(|r|r.loc as usize==id&&r.rank==rank&&!r.supply)
+}
+fn rebuild(u:&mut Ui){if !u.dirty{return;}u.count=0;
+ if u.quick_map&&u.location>=0&&!location_available(u.location as usize,u.rank){u.zone_count=0;u.selected=0;u.dirty=false;return;}
+ if u.tab==2&&u.location>=0&&!location_available(u.location as usize,u.rank){u.location=-1;u.zone=0;u.selected=0;u.detail=usize::MAX;u.depth=0;}
+ if u.tab==2&&u.location>=0{
+  u.zone_count=0;for z in 0..world::ZONES.len(){if world::GATHER.iter().any(|r|r.loc as i16==u.location&&r.rank==u.rank&&r.zone as usize==z&&!r.supply){u.zones[u.zone_count]=z as u8;u.zone_count+=1;}}
+  u.zone=u.zone.min(u.zone_count.saturating_sub(1));
+ }
+ match u.tab{
+  0=>if u.item_category<0&&u.len==0{for i in 0..item_data::CATEGORIES.len(){u.results[u.count]=i as u16;u.count+=1;}}else{for (i,e) in catalog::ENTRIES.iter().enumerate(){if e.kind==0&&(u.len>0||item_data::CATEGORY[i]as i16==u.item_category)&&query_match(e.name,u){u.results[u.count]=i as u16;u.count+=1;}}},
+  1=>if u.weapon<0{for (i,name) in world::CLASSES.iter().enumerate(){if query_match(name,u){u.results[u.count]=i as u16;u.count+=1;}}}else{for (i,n) in world::TREE.iter().enumerate(){if n.kind as i16==u.weapon{u.results[u.count]=i as u16;u.count+=1;}}},
+  3=>{for (i,w) in wishlist::entries().iter().enumerate(){if query_match(world::TREE[w.node].name,u){u.results[u.count]=i as u16;u.count+=1;}}},
+  _=>if u.location<0{for (i,l) in world::LOCATIONS.iter().enumerate(){if location_available(i,u.rank)&&query_match(l.name,u){u.results[u.count]=i as u16;u.count+=1;}}}else if u.zone_count>0{for category in 0..4{for(i,r) in world::GATHER.iter().enumerate(){if !r.supply&&r.loc as i16==u.location&&r.rank==u.rank&&r.zone==u.zones[u.zone]&&layout::category(r.site)==category&&!u.results[..u.count].iter().any(|id|{let old=&world::GATHER[*id as usize];layout::category(old.site)==category&&old.name==r.name}){u.results[u.count]=i as u16;u.count+=1;}}}},
+ }
+ u.selected=u.selected.min(u.count.saturating_sub(1));u.dirty=false;
+}
+fn enter(u:&mut Ui,id:usize){if u.detail!=usize::MAX&&u.depth<24{u.history[u.depth]=DetailState{entry:u.detail,node:u.detail_node,recipe:u.recipe,link:u.link,tree:u.tree_focus,entered:u.panel_entered};u.depth+=1;}u.detail=id;u.detail_node=world::TREE.iter().position(|n|n.entry as usize==id).unwrap_or(usize::MAX);u.recipe=0;u.panel_entered=false;u.tree_focus=u.detail_node!=usize::MAX;u.scroll=0;u.link=0;}
+fn back(u:&mut Ui){if u.pc_search{u.pc_search=false;}else if u.typing{u.typing=false;}else if weapon::active(u)&&u.panel_entered{u.panel_entered=false;}else if u.depth>0{u.depth-=1;let old=u.history[u.depth];u.detail=old.entry;u.detail_node=old.node;u.recipe=old.recipe;u.link=old.link;u.tree_focus=old.tree;u.panel_entered=old.entered;u.scroll=0;}else if u.detail!=usize::MAX{u.detail=usize::MAX;}else if u.tab==0&&(u.item_category>=0||u.len>0){u.item_category=-1;u.len=0;u.selected=0;u.dirty=true;}else if u.tab==1&&u.weapon>=0{u.weapon=-1;u.selected=0;u.dirty=true;}else if u.tab==2&&u.location>=0{u.location=-1;u.selected=0;u.dirty=true;}else{input::close();}}
+fn activate(u:&mut Ui){
+ if u.count>0{let id=u.results[u.selected] as usize;match u.tab{3=>{wishlist::open_material(u);},0=>if u.item_category<0&&u.len==0{u.item_category=id as i16;u.selected=0;u.dirty=true;}else{enter(u,id);},1=>if u.weapon<0{u.weapon=id as i16;u.len=0;u.selected=0;u.dirty=true;}else{enter(u,world::TREE[id].entry as usize);u.detail_node=id;},_=>if u.location<0{u.location=id as i16;u.zone=0;u.selected=0;u.dirty=true;}else{let r=&world::GATHER[id];if r.entry!=65535{enter(u,r.entry as usize);}}}}
+}
+#[forge::imgui_render]fn settings(){imgui::text("Hunter's Compendium");imgui::text(if input::ready(){"Start + D-pad Left. Xbox B selects; A goes back. Game continues while open."}else{"Disabled: incompatible HID imports. Check log.txt."});}
+#[forge::imgui_free_render]fn render(){
+ let u=unsafe{&mut *UI.0.get()};let mut b=0u32;
+ for(i,button)in[Button::A,Button::B,Button::X,Button::Y,Button::StickL,Button::StickR,Button::L,Button::R,Button::ZL,Button::ZR,Button::Plus,Button::Minus,Button::Left,Button::Up,Button::Right,Button::Down].into_iter().enumerate(){if Input::is_button_down(button){b|=1<<i;}}
+ let(lx,ly)=Input::get_stick_l();if lx< -0.5{b|=1<<12;}if lx>0.5{b|=1<<14;}if ly>0.5{b|=1<<13;}if ly< -0.5{b|=1<<15;}
+ let mut p=b&!u.last;let dt=imgui::get_io().DeltaTime.min(0.1);if b==u.last&&b&0xf000!=0{u.repeat+=dt;if u.repeat>0.4{p|=b&0xf000;u.repeat=0.32;}}else{u.repeat=0.0;}u.last=b;
+ if Input::is_key_pressed(forge::input::Key::F6){input::toggle();}
+ let smith=smithy::frame();if !input::open(){if let Some((node,recipe))=smith{if p&(1<<5)!=0{wishlist::toggle(node,recipe);u.dirty=true;}}u.was_open=false;return;}
+ inventory::refresh(dt,!u.was_open);
+ if let Some((loc,rank))=context::location(){wishlist::load();u.was_open=true;view::wish_tracker(loc,rank);return;}
+ if !u.was_open{u.was_open=true;wishlist::load();u.quick_map=false;u.current=None;if let Some((loc,rank))=context::location(){u.tab=2;u.location=loc as i16;u.rank=rank;u.zone=0;u.selected=0;u.detail=usize::MAX;u.depth=0;u.typing=false;u.len=0;u.current=Some(loc);u.quick_map=true;u.dirty=true;}p=0;}
+ imgui::set_next_frame_want_capture_mouse(true);imgui::set_next_frame_want_capture_keyboard(true);
+ rebuild(u);if u.quick_map&&u.detail==usize::MAX{quick_map::input(u,p);if input::open(){if u.quick_map&&u.detail==usize::MAX{view::quick_map(u);}else{view::draw(u);}}return;}
+ rebuild(u);desktop::keys(u,&mut p);if !input::open(){return;}if u.pc_search{rebuild(u);view::draw(u);return;}// MHGU controls: Xbox B selects and A backs out on every screen.
+ let confirm=p&1!=0;if p&2!=0{back(u);}if !input::open(){return;}
+ if p&(1<<3)!=0{u.typing=!u.typing;}
+ if u.typing{
+  if p&(1<<12)!=0{u.key=(u.key+KEYS.len()-1)%KEYS.len();}if p&(1<<14)!=0{u.key=(u.key+1)%KEYS.len();}if p&(1<<13)!=0{u.key=(u.key+KEYS.len()-8)%KEYS.len();}if p&(1<<15)!=0{u.key=(u.key+8)%KEYS.len();}
+  if confirm&&u.len<48{u.query[u.len]=KEYS[u.key];u.len+=1;u.dirty=true;u.selected=0;u.detail=usize::MAX;u.depth=0;u.weapon=-1;u.location=-1;}
+  if p&(1<<2)!=0&&u.len>0{u.len-=1;u.dirty=true;u.selected=0;}
+ }else{
+  if p&((1<<6)|(1<<7))!=0{u.tab=if p&(1<<7)!=0{(u.tab+1)%4}else{(u.tab+3)%4};u.selected=0;u.wish_material=0;u.detail=usize::MAX;u.depth=0;u.len=0;u.dirty=true;rebuild(u);}
+  if u.tab==2&&!weapon::active(u){if p&(1<<9)!=0{desktop::apply(u,desktop::Action::Rank((u.rank as usize+1)%3));}if p&(1<<8)!=0{desktop::apply(u,desktop::Action::Rank((u.rank as usize+2)%3));}}
+  if weapon::active(u){if p&(1<<5)!=0{wishlist::toggle(u.detail_node,u.recipe);u.dirty=true;}weapon::input(u,p);}
+  else if item::active(u){item::input(u,p);}
+  else if u.tab==3&&u.detail==usize::MAX{if p&(1<<15)!=0{wishlist::move_material(u,true,1);}if p&(1<<13)!=0{wishlist::move_material(u,false,1);}if confirm{wishlist::open_material(u);}}
+  else if u.detail!=usize::MAX{
+   let e=&catalog::ENTRIES[u.detail];if p&(1<<15)!=0&&!e.links.is_empty(){u.link=(u.link+1).min(e.links.len()-1);}if p&(1<<13)!=0{u.link=u.link.saturating_sub(1);}
+   let(_,ry)=Input::get_stick_r();u.scroll_timer+=dt;let tick=u.scroll_timer>0.10;if tick{u.scroll_timer=0.0;}
+   if p&(1<<14)!=0||ry< -0.5&&tick{u.scroll=(u.scroll+1).min(e.body.lines().count().saturating_sub(12));}if p&(1<<12)!=0||ry>0.5&&tick{u.scroll=u.scroll.saturating_sub(1);}
+   if confirm&&!e.links.is_empty(){enter(u,e.links[u.link].0);}
+  }else{
+   let tree=u.tab==1&&u.weapon>=0;
+   if tree{layout::navigate(u,p);}
+   let grid=(u.tab==0&&u.item_category<0&&u.len==0)||(u.tab==1&&u.weapon<0)||(u.tab==2&&u.location<0);let step=if grid{3}else{1};
+   if !tree&&p&(1<<15)!=0&&u.count>0{u.selected=(u.selected+step).min(u.count-1);}if !tree&&p&(1<<13)!=0{u.selected=u.selected.saturating_sub(step);}
+   if u.tab==2&&u.location>=0{
+    if p&(1<<14)!=0&&u.zone_count>0{u.zone=(u.zone+1)%u.zone_count;u.selected=0;u.dirty=true;}if p&(1<<12)!=0&&u.zone_count>0{u.zone=(u.zone+u.zone_count-1)%u.zone_count;u.selected=0;u.dirty=true;}
+   }else if !tree{let jump=if grid{1}else{12};if p&(1<<14)!=0&&u.count>0{u.selected=(u.selected+jump).min(u.count-1);}if p&(1<<12)!=0&&b&(1<<10)==0{u.selected=u.selected.saturating_sub(jump);}}
+   rebuild(u);
+   if confirm{activate(u);}
+  }
+ }
+ rebuild(u);if u.quick_map&&u.detail==usize::MAX{view::quick_map(u);}else{view::draw(u);}
+}

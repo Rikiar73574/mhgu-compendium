@@ -1,0 +1,12 @@
+/build/
+/mod/target/
+/data/
+/dist/
+__pycache__/
+*.pyc
+*.nro
+*.so
+*.db
+*.gmd
+*.tex
+*.img

@@ -1,0 +1,6 @@
+Location artwork: Monster Hunter Wiki (https://monsterhunterwiki.org/wiki/MHGU/Locations).
+Individual source pages and asset URLs are recorded in sources.json.
+Monster Hunter game artwork belongs to CAPCOM. Wiki text is CC BY-SA;
+no wiki prose is bundled here. Images are used as game-reference illustrations.
+Night variants currently share the location's daytime illustration.
+Missing verified illustrations are intentionally left empty rather than substituted.
