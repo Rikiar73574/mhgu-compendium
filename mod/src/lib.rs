@@ -65,7 +65,7 @@ fn activate(u:&mut Ui){
   if u.tab==2&&!weapon::active(u){if p&(1<<9)!=0{desktop::apply(u,desktop::Action::Rank((u.rank as usize+1)%3));}if p&(1<<8)!=0{desktop::apply(u,desktop::Action::Rank((u.rank as usize+2)%3));}}
   if weapon::active(u){if p&(1<<5)!=0{wishlist::toggle(u.detail_node,u.recipe);u.dirty=true;}weapon::input(u,p);}
   else if item::active(u){item::input(u,p);}
-  else if u.tab==3&&u.detail==usize::MAX{if p&(1<<15)!=0{wishlist::move_material(u,true,1);}if p&(1<<13)!=0{wishlist::move_material(u,false,1);}if confirm{wishlist::open_material(u);}}
+  else if u.tab==3&&u.detail==usize::MAX{if p&(1<<5)!=0{wishlist::remove_selected(u);}else{if p&(1<<15)!=0{wishlist::move_material(u,true,1);}if p&(1<<13)!=0{wishlist::move_material(u,false,1);}if confirm{wishlist::open_material(u);}}}
   else if u.detail!=usize::MAX{
    let e=&catalog::ENTRIES[u.detail];if p&(1<<15)!=0&&!e.links.is_empty(){u.link=(u.link+1).min(e.links.len()-1);}if p&(1<<13)!=0{u.link=u.link.saturating_sub(1);}
    let(_,ry)=Input::get_stick_r();u.scroll_timer+=dt;let tick=u.scroll_timer>0.10;if tick{u.scroll_timer=0.0;}

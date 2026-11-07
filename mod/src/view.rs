@@ -184,7 +184,7 @@ fn item_categories(c:&Canvas,u:&Ui){
 }
 
 fn wishlist_view(c:&Canvas,u:&Ui){
- if u.count==0{c.text(225.0,140.0,"Your wishlist is empty",CYAN,25.0);c.text(225.0,185.0,"Press R3 on a weapon to save its level and crafting recipe.",MUTED,18.0);return;}
+ if u.count==0{let empty=super::wishlist::entries().is_empty();c.text(225.0,140.0,if empty{"Your wishlist is empty"}else{"No wishlist recipes match your search"},CYAN,25.0);c.text(225.0,185.0,if empty{"Press R3 on a weapon to save its level and crafting recipe."}else{"Clear your search to see the remaining recipes."},MUTED,18.0);return;}
  let height=|i:usize|{let w=super::wishlist::entries()[u.results[i]as usize];let r=&super::weapon_data::WEAPONS[w.node].recipes[w.recipe];91.0+r.items.len()as f32*30.0};
  let mut start=0;let mut used=0.0;
  for i in 0..=u.selected.min(u.count-1){let h=height(i)+10.0;if used+h>606.0{start=i;used=0.0;}used+=h;}
@@ -194,6 +194,7 @@ fn wishlist_view(c:&Canvas,u:&Ui){
   let w=super::wishlist::entries()[u.results[i]as usize];let n=&world::TREE[w.node];let recipe=&super::weapon_data::WEAPONS[w.node].recipes[w.recipe];
   c.card(218.0,y,1034.0,h,false);c.icon(n.kind as usize,232.0,y+12.0,28.0);
   let mut t=Text::new();let _=write!(t,"{} Lv{}",n.name,n.level);c.text(273.0,y+10.0,t.str(),TEXT,20.0);c.text(273.0,y+34.0,recipe.label,MUTED,13.0);c.text(1000.0,y+16.0,recipe.price,MUTED,15.0);c.text(1136.0,y+16.0,"B  Item sources",CYAN,14.0);
+  c.text(1080.0,y+40.0,if i==u.selected&&super::wishlist::failed(){"Wishlist save failed"}else if i==u.selected{"R3  Remove"}else{"Remove"},CYAN,14.0);c.hit(1070.0,y+32.0,170.0,27.0,Action::WishRemove(i));
   c.text(268.0,y+60.0,"Material",MUTED,13.0);c.text(880.0,y+60.0,"Owned",MUTED,13.0);c.text(1000.0,y+60.0,"Needed",MUTED,13.0);c.text(1135.0,y+60.0,"Total",MUTED,13.0);
   c.line(238.0,y+80.0,1230.0,y+80.0,EDGE);
   for (j,item) in recipe.items.iter().enumerate(){let x=238.0;let iy=y+91.0+j as f32*30.0;

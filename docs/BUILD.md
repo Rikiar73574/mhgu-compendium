@@ -62,6 +62,8 @@ A source citation does not grant permission to redistribute third-party assets.
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 MHGU_GAME_DIR=/path/to/owned-game/data \
   python3 tests/arm_native_hint.py
+MHGU_GAME_DIR=/path/to/owned-game/data \
+  python3 tests/arm_wishlist_remove.py
 ```
 
 Data/layout checks require prepared local data. The targeted ARM test uses the

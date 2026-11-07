@@ -16,6 +16,8 @@ The game continues while the browser is open.
 - X opens controller search. Desktop typing also searches.
 - R3 adds or removes a weapon recipe from the wishlist, including supported
   native smithy upgrade screens.
+- In Wishlist, R3 removes the selected recipe; its Remove action also works with
+  the mouse. Up/Down still selects materials, and removal is always manual.
 - Material rows open their acquisition sources. The wishlist reads box and
   physical pouch inventory and stores its own `compendium_wishlist.txt` file.
 

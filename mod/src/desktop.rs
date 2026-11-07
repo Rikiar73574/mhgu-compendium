@@ -1,9 +1,9 @@
 use super::{Ui,Input,back,rebuild,activate,enter};
 use forge::{input::Key,imgui};
-#[derive(Clone,Copy)]pub enum Action{QuickExpand,WishMaterial(usize,usize),None,Wishlist,Back,Search,Tab(usize),Select(usize),Entry(usize),Zone(usize),Rank(usize),WeaponNode(usize),Recipe(usize),Material(usize),Panel(bool),ItemGroup(usize),Page(bool)}
+#[derive(Clone,Copy)]pub enum Action{QuickExpand,WishMaterial(usize,usize),WishRemove(usize),None,Wishlist,Back,Search,Tab(usize),Select(usize),Entry(usize),Zone(usize),Rank(usize),WeaponNode(usize),Recipe(usize),Material(usize),Panel(bool),ItemGroup(usize),Page(bool)}
 pub fn apply(u:&mut Ui,a:Action){match a{Action::WishMaterial(w,m)=>{u.selected=w;u.wish_material=m;super::wishlist::open_material(u);},Action::QuickExpand=>{u.quick_map=false;},
  Action::WeaponNode(id)=>{super::weapon::select(u,id);u.tree_focus=true;u.panel_entered=true;},Action::Recipe(i)=>{u.recipe=i;u.link=usize::MAX;u.tree_focus=false;u.panel_entered=true;},Action::Material(i)=>{super::weapon::open_material(u,i);},Action::Panel(tree)=>{u.tree_focus=tree;u.panel_entered=true;if !tree{u.link=0;}},
- Action::ItemGroup(i)=>super::item::group(u,i),
+ Action::ItemGroup(i)=>super::item::group(u,i),Action::WishRemove(i)=>{u.selected=i;super::wishlist::remove_selected(u);},
  Action::Wishlist=>{if super::weapon::active(u){super::wishlist::toggle(u.detail_node,u.recipe);u.dirty=true;}},
  Action::None=>{},Action::Back=>back(u),Action::Search=>{u.pc_search=true;u.typing=false;},
  Action::Tab(tab)=>{u.tab=tab as u8;u.selected=0;u.wish_material=0;u.detail=usize::MAX;u.depth=0;u.len=0;u.pc_search=false;u.typing=false;u.dirty=true;},

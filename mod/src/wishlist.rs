@@ -38,3 +38,12 @@ pub(super) fn open_material(u:&mut super::Ui){
  if u.count==0{return;}
  if let Some(item)=materials(u).get(u.wish_material){if item.entry!=65535{super::enter(u,item.entry as usize);}}
 }
+
+pub(super) fn remove_selected(u:&mut super::Ui){
+ if u.selected>=u.count{return;}
+ let Some(w)=u.results.get(u.selected).and_then(|i|entries().get(*i as usize)).copied()else{return;};
+ u.wish_material=u.wish_material.min(materials(u).len().saturating_sub(1));
+ toggle(w.node,w.recipe);
+ if failed(){return;}
+ u.wish_material=0;u.dirty=true;super::rebuild(u);
+}
