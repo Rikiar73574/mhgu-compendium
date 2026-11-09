@@ -92,6 +92,28 @@ def item_details(soup):
             sources.append({'kind':section,'fields':fields,'rank':{'Low Rank':'LR','High Rank':'HR','G Rank':'GR'}.get(fields[0]),'links':[{'id':identity(a['href']),'name':text(a),'url':a['href']} for a in tr.select('a[href]')]})
     return sources
 
+def monster_sources(connection):
+    """Use database item identities, retaining each condition and rank separately."""
+    from collections import defaultdict
+    result=defaultdict(list)
+    for name,monster,condition,rank,qty,rate in connection.execute(
+            'select i.name,m.name,r.condition,r.rank,r.stack_size,r.percentage '
+            'from hunting_rewards r join items i on i._id=r.item_id '
+            'join monsters m on m._id=r.monster_id order by m.name,r.rank,r.condition'):
+        result[name].append((monster,condition,'GR' if rank=='G' else rank,qty,rate))
+    return result
+
+def quest_sources(connection):
+    """All quest rewards, even when an item also has gathering or monster sources."""
+    from collections import defaultdict
+    result=defaultdict(list)
+    sql=('select i.name,q.name,q.hub,q.stars,q.rank,r.reward_slot,r.stack_size,r.percentage '
+         'from quest_rewards r join quests q on q._id=r.quest_id join items i on i._id=r.item_id '
+         'order by q.name,q.hub,q.stars,r.reward_slot')
+    for item,quest,hub,stars,rank,slot,qty,rate in connection.execute(sql):
+        result[item].append((quest,f'{hub} ★{stars} / Reward {slot}','GR' if rank=='G' else rank,qty,rate))
+    return result
+
 def build(offline=False):
     items=item_index(fetch('/item',offline));weapons={}
     index=fetch('/item',offline)

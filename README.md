@@ -11,6 +11,11 @@ The game continues while the browser is open.
 
 [Screenshots](docs/SCREENSHOTS.md)
 
+Item sources include all monster drops and quest rewards available in the local
+MHGenDatabase, with LR/HR/GR, carve/capture/break conditions, reward slots,
+quantities and rates. Items can list both monster drops and quest rewards.
+Missing database records remain unavailable rather than receiving guessed sources.
+
 - Start + D-pad Left opens or closes the Compendium; F6 is the keyboard shortcut.
 - Xbox B selects; Xbox A goes back. LB/RB changes section.
 - X opens controller search. Desktop typing also searches.

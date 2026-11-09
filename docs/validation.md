@@ -71,3 +71,31 @@ console and every possible plugin combination were not established by this
 record. A synthetic F6 down/up within one poll was missed by raw key polling;
 this run verified the real controller chord. Wishlist persistence is separate
 from native game-save persistence, which is not claimed for the copied fixtures.
+
+## Complete monster and quest item sources
+
+The importer includes all hunting and quest rewards in the supplied
+MHGenDatabase: 8,044 monster records for 1,409 items and 37,370 quest records
+for 1,814 items. Quest records are retained for items that also have carves,
+gathering sources or ordinary item icons. The prepared catalog has 2,067 items
+with acquisition groups; 839 still have no imported source, including items
+requiring other acquisition systems. Sources are not guessed for those entries.
+
+Source rows intern their five display strings as u16 IDs, reducing each ARM row
+from 40 to 10 bytes. Exact duplicate display rows are rendered once.
+Database-to-generated-data checks confirmed every monster and quest reward,
+including ranks, conditions, quantities and rates.
+
+The source-only build passed 15 Python tests, seven Rust tests and the compiled
+ARM scenarios in `tests/arm_item_sources.py`. The scenarios check literal rows
+for Commendation, Rathalos Scale and Hyper Monster Bone, source-group navigation
+and reward paging. Spot checks match Kiranico's
+[Commendation](https://mhgu.kiranico.com/item/dda84) and
+[Rathalos Scale](https://mhgu.kiranico.com/item/59de8) pages. Screenshots are ARM
+draw-call previews; no new native game launch is claimed for this change.
+
+The standalone NRO has a 7,733,248-byte aligned image+BSS footprint. The current
+seven-plugin stack plus loader headroom leaves 1,966,080 bytes free. SHA256:
+`b93b8e999ea8fa9265226aab875481cd30fd6dbf050564644f9719a9c9be4c7c`.
+This artifact uses the committed UI baseline plus the source fix; pending
+armor/model-preview work is excluded.

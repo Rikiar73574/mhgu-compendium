@@ -169,7 +169,8 @@ fn item_details(c:&Canvas,u:&Ui){
  c.text(234.0,404.0,if group.loc>=0{"Area / gathering spot"}else{"Source"},MUTED,14.0);c.text(1030.0,404.0,"Rank",MUTED,14.0);c.text(1100.0,404.0,"Qty",MUTED,14.0);c.text(1174.0,404.0,"Chance",MUTED,14.0);
  let start=u.scroll/8*8;
  for(i,row)in group.rows.iter().enumerate().skip(start).take(8){let y=435.0+(i-start)as f32*34.0;if i==u.scroll{c.rect(226.0,y-4.0,1018.0,33.0,0xff443d20);}
-  c.clip(234.0,y-1.0,783.0,33.0);c.text(234.0,y,row.label,TEXT,15.0);c.text(234.0,y+17.0,row.method,MUTED,12.0);c.endclip();c.text(1030.0,y+5.0,row.rank,TEXT,15.0);c.text(1100.0,y+5.0,row.qty,CYAN,15.0);c.text(1174.0,y+5.0,row.rate,TEXT,15.0);
+  let[label,method,rank,qty,rate]=row.text();
+  c.clip(234.0,y-1.0,783.0,33.0);c.text(234.0,y,label,TEXT,15.0);c.text(234.0,y+17.0,method,MUTED,12.0);c.endclip();c.text(1030.0,y+5.0,rank,TEXT,15.0);c.text(1100.0,y+5.0,qty,CYAN,15.0);c.text(1174.0,y+5.0,rate,TEXT,15.0);
   c.line(234.0,y+30.0,1235.0,y+30.0,EDGE);
  }
  if group.rows.len()>8{let mut t=Text::new();let _=write!(t,"{} / {}",start/8+1,(group.rows.len()+7)/8);c.text(1175.0,713.0,t.str(),MUTED,12.0);}
