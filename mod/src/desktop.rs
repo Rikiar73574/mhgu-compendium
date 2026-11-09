@@ -20,7 +20,7 @@ pub fn keys(u:&mut Ui,p:&mut u32){
  let mut typed=[0u8;40];let mut typed_len=0;
  for (key,ch) in [(Key::A,b'a'),(Key::B,b'b'),(Key::C,b'c'),(Key::D,b'd'),(Key::E,b'e'),(Key::F,b'f'),(Key::G,b'g'),(Key::H,b'h'),(Key::I,b'i'),(Key::J,b'j'),(Key::K,b'k'),(Key::L,b'l'),(Key::M,b'm'),(Key::N,b'n'),(Key::O,b'o'),(Key::P,b'p'),(Key::Q,b'q'),(Key::R,b'r'),(Key::S,b's'),(Key::T,b't'),(Key::U,b'u'),(Key::V,b'v'),(Key::W,b'w'),(Key::X,b'x'),(Key::Y,b'y'),(Key::Z,b'z'),(Key::N0,b'0'),(Key::N1,b'1'),(Key::N2,b'2'),(Key::N3,b'3'),(Key::N4,b'4'),(Key::N5,b'5'),(Key::N6,b'6'),(Key::N7,b'7'),(Key::N8,b'8'),(Key::N9,b'9'),(Key::Space,b' '),(Key::Minus,b'-'),(Key::Apostrophe,b'\'')]{if Input::is_key_pressed(key){typed[typed_len]=ch;typed_len+=1;}}
  // Printable physical keys take precedence over the game's WASD/controller mapping.
- if typed_len>0&&!Input::is_ctrl_down()&&!Input::is_alt_down(){u.pc_search=true;u.typing=false;}
+ if typed_len>0&&!Input::is_ctrl_down()&&!Input::is_alt_down(){u.pc_search=true;u.typing=false;*p=0;}
  if u.pc_search{let finish=*p&3!=0;*p=0;if finish{u.pc_search=false;return;}if Input::is_key_pressed(Key::Enter){u.pc_search=false;return;}
   if Input::is_ctrl_down(){if Input::is_key_pressed(Key::A){u.len=0;changed(u);}return;}
   for ch in &typed[..typed_len]{if u.len<48{u.query[u.len]=*ch;u.len+=1;changed(u);}}

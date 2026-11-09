@@ -3,7 +3,9 @@
 A standalone Forge plugin for MHGURecomp and MHGU 1.4.0. Browse items, weapon
 upgrade trees, armor pieces and sets, crafting materials, gathering and monster
 reward sources, and a persistent wishlist.
-The development build also suggests unlocked quests for missing wishlist materials.
+The development build also suggests unlocked quests for missing wishlist materials
+and uses native MHGU frame artwork, title banners, button glyphs and proportional
+lettering.
 These changes are not yet in the published v0.2.2 release.
 The game continues while the browser is open. Armor details include a native
 full-set model preview using installed texture replacements. Right stick rotates
@@ -24,7 +26,8 @@ Missing database records remain unavailable rather than receiving guessed source
 - Start + D-pad Left opens or closes the Compendium; F6 is the keyboard shortcut.
 - Xbox B selects; Xbox A goes back. LB/RB changes section.
 - X opens a compact QWERTY controller keyboard with live matches and clickable keys.
-  Desktop typing searches within the selected weapon type. Interface size can be
+  Type directly on a physical keyboard to search inline, without opening that
+  keyboard. Searches stay within the selected weapon type. Interface size can be
   adjusted in the Forge settings.
 - Weapon families and sibling branches are ordered by rarity. LT/RT jumps between
   families; Up/Down stays in the same tree column.

@@ -99,7 +99,7 @@ def preview(name):
   if kind=='ImDrawList_PopClipRect':clips.pop();continue
   layer=Image.new('RGBA',im.size);paint=ImageDraw.Draw(layer)
   if kind=='text':
-   x,y,size=coords;font=ImageFont.truetype('/usr/share/fonts/TTF/DejaVuSans.ttf',max(1,int(size)))
+   x,y,size=coords;font=ImageFont.truetype(str(ROOT/'build/data/game-ui/native.ttf') if (ROOT/'build/data/game-ui/native.ttf').is_file() else '/usr/share/fonts/TTF/DejaVuSans.ttf',max(1,int(size)))
    paint.text((x,y),arg[1],font=font,fill=color(arg[0]),anchor='lt')
   elif kind=='ImDrawList_AddLine':paint.line(coords,fill=color(arg),width=1)
   elif kind=='ImDrawList_AddRect':paint.rectangle(coords,outline=color(arg),width=1)

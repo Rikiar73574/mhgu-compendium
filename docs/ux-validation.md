@@ -8,22 +8,22 @@ not target the user's game.
 
 ## Candidate
 
-NRO SHA256: `dc546adfa11266e6786f98df261b7cde1ec16252951508dbe05f58fa6776063f`.
+NRO SHA256: `9fe15a8b74b572a8e4b53748bfce4eb3a29577351fd7fe6a8574c7d300aa4a5c`.
 
-The ARM plugin occupies 8,454,144 bytes including BSS and alignment. The seven
-loaded plugins total 11,272,192 bytes, leaving 1,310,720 bytes of the 12 MiB
+The ARM plugin occupies 8,585,216 bytes including BSS and alignment. The seven
+loaded plugins total 11,403,264 bytes, leaving 1,179,648 bytes of the 12 MiB
 region before any additional headroom reservation. The stack includes Armor
 Fusion, damage numbers, HuntLog, key quest markers, MapAssist and the sharpness
 gauge. Loading these does not verify all of their combat features.
 
 ## Automated coverage
 
-- 18 Python data, input, preparation, layout and packaging tests.
+- 19 Python data, input, preparation, layout and packaging tests.
 - 16 Rust tests covering input capture/passive mode, inventory, spatial search,
   sparse tree columns, family jumps, source coverage and exclusion of locked or
   unknown quests.
 - Compiled ARM suites cover pointer/controller search, physical search scope,
-  mouse material-return focus, armor browsing/rank filters, additive full-set
+  physical typing priority over game-confirm/back bindings, mouse material-return focus, armor browsing/rank filters, additive full-set
   wishlist entries, mixed recipe persistence, shared material demand, native
   quest-entry checks, direct sources, removal/save-failure paths and native
   smithy hint/category compatibility.
@@ -52,6 +52,27 @@ Current native [quest route](screenshots/quest-route-hr1.png) and
 Full machine-readable evidence remains in ignored
 `build/native-preview-tests/` and `build/ux-baseline/`. ARM rasterizations are
 labelled separately from native game screenshots.
+
+## Native-style and inline search follow-up
+
+The updated native captures show the game's own window corner motifs, wooden
+title artwork, button glyphs and gold selection frames. Proportional lettering
+is prepared from locally installed native/HD game glyph masks and added through
+Forge's existing font atlas. UI frames are small cropped run-length sprites;
+full source atlases are not embedded. The UI remains a custom draw-list browser,
+not a collection of native forge widgets.
+
+Physical typing opens inline search without the controller keyboard. Its ARM
+regression injects both J with mapped confirm and Space with mapped back; both
+characters are retained, results update, and the on-screen keyboard stays
+closed. Enter leaves editing; controller X still opens its QWERTY keyboard.
+This remains ASCII key polling, without paste, selection or IME composition.
+
+The final native-style NRO was launched with the seven-plugin stack and the
+installed HD textures/font, in the same isolated profile. Item lists, controller
+search, armor stats/materials and the rendered full set were captured. The
+native font atlas initialization completed without a new assertion or crash.
+The existing mirror-capacity warning remains as documented below.
 
 ## Limits
 

@@ -3,11 +3,12 @@ import struct,math
 from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
-def decode(path):
- d=path.read_bytes();magic,a,b,c,length=struct.unpack_from('<5I',d)
+def decode(path):return decode_bytes(path.read_bytes())
+def decode_bytes(d):
+ magic,a,b,c,length=struct.unpack_from('<5I',d)
  assert magic==0x584554 and a&4095==160
  w,h=(b>>6)&8191,b>>19;fmt=(c>>8)&255;mips=b&63
- assert fmt in (19,23),(path,fmt)
+ assert fmt in (19,23),fmt
  size=8 if fmt==19 else 16;wb,hb=(w+3)//4,(h+3)//4;bh=min(16,1<<max(0,math.ceil(math.log2(max(1,hb/8)))))
  src=d[20+4*mips:];row=wb*size;wg=(row+63)//64;out=bytearray(row*hb)
  for y in range(hb):

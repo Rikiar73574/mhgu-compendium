@@ -2,15 +2,17 @@ use super::{Ui,Text,catalog,world};
 use core::{fmt::Write,cell::Cell};
 use super::desktop::{self,Action};
 use forge::{imgui,sys::imgui::ImVec2};
-const BG:u32=0xff10151c;const PANEL:u32=0xff19232c;const EDGE:u32=0xff455467;const CYAN:u32=0xff65d7f2;const TEXT:u32=0xffe3eff6;const MUTED:u32=0xffb5c4ce;
-struct Canvas{d:imgui::DrawList,f:imgui::ImFont,s:f32,x:f32,y:f32,click:Option<(f32,f32)>,action:Cell<Action>}
+const BG:u32=0xff16120e;const PANEL:u32=0xff181614;const EDGE:u32=0xff62584b;const CYAN:u32=0xff65d7f2;const TEXT:u32=0xffe3eff6;const MUTED:u32=0xffb5c4ce;const GOLD:u32=0xff46d8f2;
+struct Canvas{d:imgui::DrawList,f:*mut forge::sys::imgui::ImFont,s:f32,x:f32,y:f32,click:Option<(f32,f32)>,action:Cell<Action>}
 impl Canvas{
  fn hit(&self,x:f32,y:f32,w:f32,h:f32,a:Action){if let Some((mx,my))=self.click{let p=self.v(x,y);if mx>=p.x&&mx<p.x+w*self.s&&my>=p.y&&my<p.y+h*self.s{self.action.set(a);}}}
  fn v(&self,x:f32,y:f32)->ImVec2{ImVec2{x:self.x+x*self.s,y:self.y+y*self.s}}
  fn rect(&self,x:f32,y:f32,w:f32,h:f32,c:u32){self.d.add_rect_filled(self.v(x,y),self.v(x+w,y+h),c,1.0*self.s);}
  fn line(&self,x:f32,y:f32,x2:f32,y2:f32,c:u32){self.d.add_line(self.v(x,y),self.v(x2,y2),c,self.s);}
- fn text(&self,x:f32,y:f32,t:&str,c:u32,size:f32){self.d.add_text_with_font(&self.f,size*self.s,self.v(x,y),c,t);}
- fn card(&self,x:f32,y:f32,w:f32,h:f32,selected:bool){self.rect(x,y,w,h,if selected{0xff303f5c}else{PANEL});self.d.add_rect(self.v(x,y),self.v(x+w,y+h),if selected{CYAN}else{EDGE},1.0*self.s,if selected{2.0*self.s}else{self.s},forge::sys::imgui::ImDrawFlags::None);}
+ fn text(&self,x:f32,y:f32,t:&str,c:u32,size:f32){super::game_ui::text(&self.d,self.f,size*self.s,self.v(x,y),c,t);}
+ fn frame(&self,id:usize,x:f32,y:f32,w:f32,h:f32,color:u32){let p=self.v(x,y);super::game_ui::frame(&self.d,id,[p.x,p.y,w*self.s,h*self.s],color,self.s);}
+ fn card(&self,x:f32,y:f32,w:f32,h:f32,selected:bool){self.rect(x,y,w,h,if selected{0xff274653}else{PANEL});self.frame(1,x,y,w,h,if selected{GOLD}else{0xffb5b0a5});}
+ fn button(&self,index:usize,x:f32,y:f32,label:&str){let p=self.v(x,y);super::game_ui::button(&self.d,index,[p.x,p.y,23.0*self.s,23.0*self.s]);self.text(x+31.0,y+2.0,label,TEXT,17.0);}
  fn clip(&self,x:f32,y:f32,w:f32,h:f32){self.d.push_clip_rect(self.v(x,y),self.v(x+w,y+h),true);}
  fn endclip(&self){self.d.pop_clip_rect();}
  fn sprite(&self,id:usize,x:f32,y:f32,size:f32){let pos=self.v(x,y);super::ui_art::compendium_sprite_preview(id as u32,pos.x,pos.y,size*self.s,size*self.s);}
@@ -19,25 +21,27 @@ impl Canvas{
 }
 pub(super) fn draw(u:&mut Ui){
  let size=imgui::get_io().DisplaySize;let s=(size.x/1440.0).min(size.y/900.0)*0.85*u.scale as f32/100.0;if s<=0.0{return;}
- let c=Canvas{d:imgui::DrawList::foreground(),f:imgui::ImFont::current(),s,x:(size.x-1280.0*s)/2.0,y:(size.y-800.0*s)/2.0,click:desktop::pointer(u),action:Cell::new(Action::None)};
+ let c=Canvas{d:imgui::DrawList::foreground(),f:super::game_ui::font(),s,x:(size.x-1280.0*s)/2.0,y:(size.y-800.0*s)/2.0,click:desktop::pointer(u),action:Cell::new(Action::None)};
  // The native model is rendered before Forge. Leave its viewport uncovered.
  let game_scale=(size.x/1280.0).min(size.y/720.0);
  let native=|x:f32,y:f32|{let p=c.v(x,y);[((p.x-(size.x-1280.0*game_scale)/2.0)/game_scale)as i32,((p.y-(size.y-720.0*game_scale)/2.0)/game_scale)as i32]};
  let left=native(218.0,218.0);let right=native(518.0,630.0);
  let model=super::armor::active(u)&&!u.typing&&super::armor_preview::request(super::armor::index(u),[left[0],left[1],right[0],right[1]]);
  if model{c.rect(0.0,0.0,218.0,800.0,BG);c.rect(218.0,0.0,300.0,218.0,BG);c.rect(218.0,630.0,300.0,170.0,BG);c.rect(518.0,0.0,762.0,800.0,BG);}else{c.rect(0.0,0.0,1280.0,800.0,BG);}
- c.rect(0.0,0.0,1280.0,45.0,0xff252340);c.line(0.0,45.0,1280.0,45.0,CYAN);c.text(20.0,13.0,"MHGU Compendium",CYAN,22.0);c.text(315.0,17.0,"Back",CYAN,15.0);c.hit(305.0,5.0,95.0,35.0,Action::Back);c.text(1050.0,17.0,"Prev       Next",CYAN,15.0);c.hit(1040.0,5.0,80.0,35.0,Action::Page(false));c.hit(1120.0,5.0,95.0,35.0,Action::Page(true));
- c.line(190.0,45.0,190.0,755.0,EDGE);c.text(18.0,70.0,"Navigation",MUTED,14.0);
- for(i,name)in["Items","Weapons","Locations","Wishlist","Armor"].iter().enumerate(){let y=108.0+i as f32*55.0;c.hit(10.0,y-9.0,170.0,44.0,Action::Tab(i));if i==u.tab as usize{c.rect(10.0,y-9.0,170.0,44.0,0xff303f5c);c.rect(10.0,y-9.0,3.0,44.0,CYAN);}c.text(26.0,y,name,if i==u.tab as usize{CYAN}else{TEXT},20.0);}
- c.text(18.0,420.0,"LB / RB",CYAN,16.0);c.text(18.0,445.0,"Switch section",MUTED,14.0);c.text(18.0,660.0,"B  Select",TEXT,16.0);c.text(18.0,687.0,"A  Back",TEXT,16.0);c.text(18.0,714.0,"X  Search",TEXT,16.0);
+ c.frame(0,0.0,0.0,1280.0,800.0,u32::MAX);
+ let title=c.v(8.0,6.0);super::game_ui::title(&c.d,[title.x,title.y,1264.0*s,39.0*s]);
+ c.text(28.0,14.0,"MHGU Compendium",TEXT,22.0);c.text(315.0,17.0,"Back",TEXT,15.0);c.hit(305.0,5.0,95.0,35.0,Action::Back);c.text(1050.0,17.0,"Prev       Next",TEXT,15.0);c.hit(1040.0,5.0,80.0,35.0,Action::Page(false));c.hit(1120.0,5.0,95.0,35.0,Action::Page(true));
+ c.line(190.0,51.0,190.0,748.0,EDGE);c.text(18.0,70.0,"Navigation",MUTED,14.0);
+ for(i,name)in["Items","Weapons","Locations","Wishlist","Armor"].iter().enumerate(){let y=108.0+i as f32*55.0;c.hit(10.0,y-9.0,170.0,44.0,Action::Tab(i));if i==u.tab as usize{c.card(10.0,y-9.0,170.0,44.0,true);for row in 0..5{let width=(5-row)as f32;c.rect(20.0,y+6.0+row as f32, width,1.0,GOLD);c.rect(20.0,y+6.0-row as f32,width,1.0,GOLD);}}c.text(38.0,y,name,if i==u.tab as usize{GOLD}else{TEXT},20.0);}
+ c.text(18.0,420.0,"LB / RB",CYAN,16.0);c.text(18.0,445.0,"Switch section",MUTED,14.0);c.button(3,18.0,656.0,"Select");c.button(2,18.0,685.0,"Back");c.button(1,18.0,714.0,"Search");
  let mut t=Text::new();let _=write!(t,"{}",if super::item::active(u){"Item sources"}else if super::armor::active(u){"Armor"}else if super::weapon::active(u){"Weapon details"}else{["Item list","Weapon trees","Locations","Wishlist","Armor"][u.tab as usize]});c.text(211.0,62.0,t.str(),CYAN,23.0);
- let mut q=Text::new();let _=write!(q,"Search: {}{}",core::str::from_utf8(&u.query[..u.len]).unwrap_or(""),if u.typing||u.pc_search{"_"}else{""});c.card(735.0,55.0,522.0,38.0,u.pc_search);c.hit(735.0,55.0,522.0,38.0,Action::Search);c.text(748.0,64.0,q.str(),MUTED,17.0);
+ let mut q=Text::new();if u.len==0&&!u.typing&&!u.pc_search{let _=write!(q,"Type to search...");}else{let _=write!(q,"Search: {}{}",core::str::from_utf8(&u.query[..u.len]).unwrap_or(""),if u.typing||u.pc_search{"_"}else{""});}c.card(735.0,55.0,522.0,38.0,u.pc_search);c.hit(735.0,55.0,522.0,38.0,Action::Search);c.text(748.0,64.0,q.str(),MUTED,17.0);
  if u.tab==4{for(i,label)in ["All","LR","HR","GR"].iter().enumerate(){let x=430.0+i as f32*69.0;c.card(x,57.0,61.0,34.0,u.armor_rank==i as i8-1);c.text(x+12.0,64.0,label,TEXT,18.0);c.hit(x,57.0,61.0,34.0,Action::ArmorRank(i as i8-1));}}
  if u.tab==2{for(i,rank)in["LR","HR","GR"].iter().enumerate(){let x=465.0+i as f32*75.0;c.card(x,57.0,64.0,34.0,i==u.rank as usize);c.hit(x,57.0,64.0,34.0,Action::Rank(i));c.text(x+18.0,64.0,rank,if i==u.rank as usize{CYAN}else{TEXT},18.0);}}
  c.line(205.0,105.0,1264.0,105.0,EDGE);c.clip(205.0,110.0,1059.0,635.0);
  if u.typing{keyboard(&c,u);}else if u.detail!=usize::MAX{details(&c,u);}else if u.tab==1&&u.weapon>=0{tree(&c,u);}else if u.tab==2&&u.location>=0{gather(&c,u);}else if u.tab==1||u.tab==2{grid(&c,u);}else if u.tab==3&&u.planner{quest_plan(&c);}else if u.tab==3{wishlist_view(&c,u);}else if u.tab==4{armor_list(&c,u);}else if u.tab==0&&u.item_category<0&&u.len==0{item_categories(&c,u);}else{items(&c,u);}
  c.endclip();c.line(0.0,755.0,1280.0,755.0,EDGE);
- c.text(210.0,768.0,if super::armor::active(u){"Left / Right: set piece     Up / Down: material     B: sources     R3: piece     Y: add set"}else if super::item::active(u){"Left / Right: map or source     Up / Down: rows     A: back"}else if super::weapon::active(u){if u.tree_focus{"D-pad: navigate tree     B: materials     A: weapon tree"}else if u.link==usize::MAX{"Left / Right: recipe     Up: tree     Down: materials"}else{"Up / Down: material     B: item sources     A: miniature tree"}}else if super::weapon::controls(u){"Up / Down: link     B: open     A: back"}else if u.tab==2&&u.location>=0{"Left / Right: zone     LT / RT: LR / HR / GR     B: item details"}else if u.tab==2{"D-pad: location     LT / RT: LR / HR / GR     B: browse zones"}else if u.tab==1&&u.weapon>=0{"Up / Down: column     Left / Right: upgrades     LT / RT: family     B: details"}else if u.planner{"Left / Right: quest     Up / Down: material     B: sources     Y: refresh     A: wishlist"}else{"D-pad / left stick: navigate     Right stick: scroll details"},TEXT,16.0);
+ c.text(210.0,768.0,if u.pc_search{"Type: search     Backspace: delete     Enter: results     Esc: leave search"}else if super::armor::active(u){"Left / Right: set piece     Up / Down: material     B: sources     R3: piece     Y: add set"}else if super::item::active(u){"Left / Right: map or source     Up / Down: rows     A: back"}else if super::weapon::active(u){if u.tree_focus{"D-pad: navigate tree     B: materials     A: weapon tree"}else if u.link==usize::MAX{"Left / Right: recipe     Up: tree     Down: materials"}else{"Up / Down: material     B: item sources     A: miniature tree"}}else if super::weapon::controls(u){"Up / Down: link     B: open     A: back"}else if u.tab==2&&u.location>=0{"Left / Right: zone     LT / RT: LR / HR / GR     B: item details"}else if u.tab==2{"D-pad: location     LT / RT: LR / HR / GR     B: browse zones"}else if u.tab==1&&u.weapon>=0{"Up / Down: column     Left / Right: upgrades     LT / RT: family     B: details"}else if u.planner{"Left / Right: quest     Up / Down: material     B: sources     Y: refresh     A: wishlist"}else{"D-pad / left stick: navigate     Right stick: scroll details"},TEXT,16.0);
  c.text(18.0,770.0,"F6 / Start + Left",CYAN,14.0);
  desktop::apply(u,c.action.get());
 }
@@ -237,7 +241,7 @@ pub(super) fn quick_map(u:&mut Ui){
  let size=imgui::get_io().DisplaySize;let scale=(size.x/1000.0).min(size.y/650.0).min(0.85);if scale<=0.0{return;}
  let start=u.zone/2*2;let mut lines=0;for area in start..(start+2).min(u.zone_count){let mut ids=[0;64];lines=lines.max((super::quick_map::rows(u,area,&mut ids)+1)/2);}
  let body=(49.0+lines as f32*21.0).clamp(120.0,431.0);let height=body+109.0;
- let c=Canvas{d:imgui::DrawList::foreground(),f:imgui::ImFont::current(),s:scale,x:(size.x-960.0*scale)/2.0,y:(size.y-height*scale)/2.0,click:desktop::pointer(u),action:Cell::new(Action::None)};
+ let c=Canvas{d:imgui::DrawList::foreground(),f:super::game_ui::font(),s:scale,x:(size.x-960.0*scale)/2.0,y:(size.y-height*scale)/2.0,click:desktop::pointer(u),action:Cell::new(Action::None)};
  c.rect(0.0,0.0,960.0,height,0xf525241c);
  let name=u.current.and_then(|id|world::LOCATIONS.get(id)).map(|l|l.name).unwrap_or("Gathering");
  c.text(18.0,15.0,name,CYAN,23.0);c.text(720.0,20.0,["LR","HR","GR"][u.rank.min(2)as usize],TEXT,16.0);c.text(795.0,20.0,"X  Full compendium",MUTED,14.0);c.hit(785.0,8.0,165.0,38.0,Action::QuickExpand);
@@ -259,7 +263,7 @@ pub(super) fn quick_map(u:&mut Ui){
 /// Passive hunt HUD: only outstanding wishlist materials available on this map.
 pub(super) fn wish_tracker(loc:usize,rank:u8){
  let size=imgui::get_io().DisplaySize;let s=(size.x/1280.0).min(size.y/720.0);
- let c=Canvas{d:imgui::DrawList::foreground(),f:imgui::ImFont::current(),s,x:(size.x-1280.0*s)/2.0,y:(size.y-720.0*s)/2.0,click:None,action:Cell::new(Action::None)};
+ let c=Canvas{d:imgui::DrawList::foreground(),f:super::game_ui::font(),s,x:(size.x-1280.0*s)/2.0,y:(size.y-720.0*s)/2.0,click:None,action:Cell::new(Action::None)};
  let mut seen=[65535u16;512];let mut count=0;let mut x=1005.0;let mut y=402.0;
  for wish in super::wishlist::entries(){for item in super::wishlist::recipe(wish.node,wish.recipe).unwrap().items.iter(){
   if item.points||item.entry==65535||seen[..count].contains(&item.entry){continue;}

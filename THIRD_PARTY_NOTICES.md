@@ -23,6 +23,12 @@ Monster Hunter game artwork, graphics and game text belong to CAPCOM.
   from MHGenDatabase; weapon topology and selected item-source facts originate
   from Kiranico MHGU. Generated outputs retain separate source identities.
   They are local build inputs/outputs and are not bundled in this source tree.
+- Native window borders, title banners, button glyphs and font glyph masks are
+  extracted locally from an owned MHGU dump. The optional HD Hunter Font input
+  is a locally installed game-font replacement; its upstream project is
+  https://github.com/lick-mee/mhgu-hd-hunter-font . Converted outlines retain
+  the source glyph shapes. These graphics/fonts are not relicensed as authored
+  MIT code and are excluded from the source tree.
 - Existing scenic illustrations come from Monster Hunter Wiki; existing weapon
   renders come from Kiranico MHGen. Locally extracted minimaps come from the
   user's owned game dump. They are not included here. Original provenance notes

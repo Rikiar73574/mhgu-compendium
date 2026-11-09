@@ -9,13 +9,13 @@ Populate the Cargo cache separately if building on a new machine.
 
 ## Reuse existing local generated data
 
-This preserves the eight complete generated Rust modules byte-for-byte, including
+This preserves the nine complete generated Rust modules byte-for-byte, including
 all existing artwork, item/weapon metadata and game ID mappings. It copies only
 into ignored `build/`, without changing the source checkout supplied as input.
 
 ```sh
 python3 tools/prepare.py \
-  --generated-dir /path/to/existing-compendium/mod/src \
+  --generated-dir /path/to/existing-compendium/build/generated \
   --catalog /path/to/existing-compendium/data/catalog.json
 MHGU_TOOLCHAIN=/path/to/toolchain bash mod/build-local.sh
 ```
@@ -44,9 +44,13 @@ python3 tools/prepare.py \
 MHGU_TOOLCHAIN=/path/to/toolchain bash mod/build-local.sh
 ```
 
-Preparation reads English GMD name slots and minimap TEX files from the owned
-dump. All derived JSON, PNG and Rust files remain in ignored `build/`; none is a
-source-distribution input. The eight generated Rust modules are copied into
+Preparation reads English GMD name slots, minimap TEX files, native window/title
+artwork and the English font glyphs from the owned dump. `fonttools` converts the
+locally extracted glyph masks into proportional outlines for the existing Forge
+font atlas. Optionally set `MHGU_FONT_DIR` to a locally installed Hunter Font
+directory containing `font_festa.gfd` and `font_festa_*_HQ.tex.z` to use its
+higher-resolution glyphs. No font or UI artwork is downloaded. All derived JSON,
+PNG and Rust files remain in ignored `build/`; none is a source-distribution input. The nine generated Rust modules are copied into
 Cargo's output directory by `mod/build.rs`. `build/input-manifest.json` records
 input/generated hashes without storing private input paths.
 
