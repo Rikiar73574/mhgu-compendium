@@ -31,7 +31,7 @@ for r in c.execute('select _id,location_id,rank from quests order by _id'):
 lines += ['];']
 classes=['Great Sword','Long Sword','Sword & Shield','Dual Blades','Hammer','Hunting Horn','Lance','Gunlance','Switch Axe','Charge Blade','Insect Glaive','Light Bowgun','Heavy Bowgun','Bow']
 iconids=[0,7,1,11,2,12,3,9,8,14,13,6,4,10]
-lines+=['pub static CLASSES:&[&str]=&['+','.join(map(lit,classes))+'];','pub struct Node{pub entry:u16,pub level:u8,pub name:&\'static str,pub attack:u16,pub kind:u8,pub parent:i32,pub depth:u8,pub row:u16,pub sharp:[[u8;7];3]}','pub static TREE:&[Node]=&[']
+lines+=['pub static CLASSES:&[&str]=&['+','.join(map(lit,classes))+'];','pub struct Node{pub entry:u16,pub level:u8,pub name:&\'static str,pub attack:u16,pub kind:u8,pub parent:i32,pub depth:u8,pub row:u16,pub rarity:u8,pub sharp:[[u8;7];3]}','pub static TREE:&[Node]=&[']
 nodeparents={};nodes={}
 for w in d['weapons'].values():
  for lv in w['levels']:
@@ -42,12 +42,14 @@ for w in d['weapons'].values():
 assert all(p in nodes for p in nodeparents.values())
 children=collections.defaultdict(list)
 for k in nodes:children[nodeparents.get(k)].append(k)
+def rarity(k):
+ return next(((11 if s[5:]=='X' else int(s[5:])) for s in nodes[k][1]['stats_text'] if s.startswith('Rare ')),0)
 ordered=[];seen=set()
 def walk(k,parent,depth):
  assert k not in seen;seen.add(k);i=len(ordered);ordered.append((k,parent,depth))
- for child in sorted(children[k],key=lambda x:(x[0]!=k[0],nodes[x][1]['name'],x[1])):walk(child,i,depth+1)
+ for child in sorted(children[k],key=lambda x:(x[0]!=k[0],rarity(x),nodes[x][1]['name'],x[1])):walk(child,i,depth+1)
 for kind in classes:
- for k in sorted(children[None],key=lambda x:(not nodes[x][1]['name'].startswith('Petrified'),nodes[x][1]['name'])):
+ for k in sorted(children[None],key=lambda x:(rarity(x),not nodes[x][1]['name'].startswith('Petrified'),nodes[x][1]['name'])):
   if nodes[k][0]['type']==kind:walk(k,-1,0)
 assert len(ordered)==len(nodes)
 lanes={};next_lane=collections.defaultdict(int)
@@ -57,7 +59,7 @@ for k,parent,depth in ordered:
  sharp=[[part['width_px'] for part in row] for row in lv.get('sharpness_display',[])][:3]
  sharp=[(row+[0]*7)[:7] for row in sharp]
  sharp=(sharp+[[0]*7]*3)[:3]
- lines.append(f'Node{{entry:{ids[w["id"]]},level:{lv["level"]},name:{lit(lv["name"])},attack:{lv["attack"]},kind:{classes.index(w["type"])},parent:{parent},depth:{depth},row:{lanes[w["id"]]},sharp:{str(sharp)}}},')
+ lines.append(f'Node{{entry:{ids[w["id"]]},level:{lv["level"]},name:{lit(lv["name"])},attack:{lv["attack"]},kind:{classes.index(w["type"])},parent:{parent},depth:{depth},row:{lanes[w["id"]]},rarity:{rarity(k)},sharp:{str(sharp)}}},')
 lines+= ['];','pub static ICONS:&[&[u32]]=&[']
 for icon in iconids:
  im=Image.open(root/f'assets/classic/{icon}.png').convert('RGBA').resize((24,24))

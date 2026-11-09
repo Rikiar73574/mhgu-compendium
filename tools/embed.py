@@ -88,6 +88,6 @@ for r in records:
  wrapped=''
  links=[]
  unique=list(dict.fromkeys(links))
- lines.append('Entry{name:'+lit(r['name'])+',search:'+lit(r['search']+(''.join(c for c in r.get('type','').lower() if c.isalnum())))+',kind:'+str(int(weapon))+',body:'+lit(wrapped)+',links:&['+','.join('('+str(ids[i])+','+lit(label)+')' for i,label in unique)+']},')
+ lines.append('Entry{name:'+lit(r['name'])+',kind:'+str(int(weapon))+',body:'+lit(wrapped)+',links:&['+','.join('('+str(ids[i])+','+lit(label)+')' for i,label in unique)+']},')
 lines.append('];');(GENERATED/'catalog.rs').write_text('\n'.join(lines)+'\n')
 print('Embedded',len(records),'entries;',supplemented,'weapon levels supplemented from exact type/name/attack matches')

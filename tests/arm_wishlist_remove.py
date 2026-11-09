@@ -53,7 +53,7 @@ with tempfile.TemporaryDirectory(prefix='compendium-remove-') as folder:
    return original(uc,at,size,ctx)
   ns['storage_callback']=failing
  if case in ['mouse','mouse_failed']:
-  preview.frame({'kind':'click','x':176+1160*.85,'y':110+164*.85})
+  op=next(o for o in ns['drawops'] if o[0]=='text' and o[2][1] in ('Remove','R3  Remove','Wishlist save failed'));preview.frame({'kind':'click','x':op[1][0]+5,'y':op[1][1]+5})
  else:press(1<<5)
  expected={'middle':[fixtures[0],fixtures[2]],'recipe':[fixtures[0],fixtures[2]],'last':fixtures[:2],
            'filtered':fixtures[:2],'empty':[],'failed':initial,'mouse':[],'mouse_failed':initial}[case]

@@ -12,7 +12,7 @@ class LayoutTests(unittest.TestCase):
    for names in groups.values():self.assertLessEqual(len(names),23,key)
  def test_tree_levels_share_lanes_and_branches_connect(self):
   source=(ROOT/'build/generated/world.rs').read_text()
-  nodes=[tuple(map(int,m)) for m in re.findall(r'Node\{entry:(\d+),level:(\d+),name:.*?,attack:\d+,kind:(\d+),parent:(-?\d+),depth:(\d+),row:(\d+),sharp:',source)]
+  nodes=[tuple(map(int,m)) for m in re.findall(r'Node\{entry:(\d+),level:(\d+),name:.*?,attack:\d+,kind:(\d+),parent:(-?\d+),depth:(\d+),row:(\d+),rarity:\d+,sharp:',source)]
   self.assertEqual(len(nodes),10877)
   occupied=set()
   for i,(entry,level,kind,parent,depth,row) in enumerate(nodes):

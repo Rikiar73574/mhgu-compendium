@@ -26,3 +26,8 @@ fn ui(selected:usize)->Ui {Ui {results:[0,1,2,3,4],count:5,selected}}
  let mut u=ui(1);layout::navigate(&mut u,1<<14);assert_eq!(u.selected,2);
  layout::navigate(&mut u,1<<12);assert_eq!(u.selected,1);
 }
+
+#[test]fn triggers_jump_families_instead_of_traversing_every_upgrade(){
+ let mut u=ui(1);layout::navigate(&mut u,1<<9);assert_eq!(u.selected,3);
+ layout::navigate(&mut u,1<<8);assert_eq!(u.selected,0);
+}

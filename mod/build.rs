@@ -2,7 +2,7 @@ use std::{env,fs,path::PathBuf};
 fn main() {
     let root=PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("../build/generated");
     let out=PathBuf::from(env::var("OUT_DIR").unwrap());
-    for name in ["catalog","world","weapon_data","item_data","map_pixels","ui_pixels"] {
+    for name in ["quest_data","armor_data","catalog","world","weapon_data","item_data","map_pixels","ui_pixels"] {
         let input=root.join(format!("{name}.rs"));
         println!("cargo:rerun-if-changed={}",input.display());
         fs::copy(&input,out.join(format!("{name}.rs")))

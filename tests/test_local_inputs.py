@@ -4,6 +4,20 @@ import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"tools"))
 from game_names import names, export
 class LocalInputsTest(unittest.TestCase):
+ def test_armor_names_preserve_native_series_and_slot(self):
+  from game_names import armor_names
+  with tempfile.TemporaryDirectory() as folder:
+   path=Path(folder)/'armor.gmd';header=bytearray(41);header[:4]=b'GMD\0'
+   rows=['']*10+['Leather Headgear','Leather Vest','','Leather Belt','Leather Trousers']+['description']*5
+   path.write_bytes(header+'\0'.join(rows).encode()+b'\0')
+   self.assertEqual(armor_names(path),{'0':{'Leather Headgear':1},'1':{'Leather Vest':1},'2':{},'3':{'Leather Belt':1},'4':{'Leather Trousers':1}})
+ def test_ambiguous_armor_name_is_not_mapped(self):
+  from game_names import armor_names
+  with tempfile.TemporaryDirectory() as folder:
+   path=Path(folder)/'armor.gmd';header=bytearray(41);header[:4]=b'GMD\0'
+   rows=(['Same Helm']+['']*9)*3
+   path.write_bytes(header+'\0'.join(rows).encode()+b'\0')
+   self.assertNotIn('Same Helm',armor_names(path)['0'])
  def test_reads_only_name_slots(self):
   with tempfile.TemporaryDirectory() as folder:
    path=Path(folder)/"fixture.gmd";header=bytearray(41);header[:4]=b"GMD\0"

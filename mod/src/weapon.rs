@@ -5,7 +5,7 @@ pub fn controls(u:&Ui)->bool{active(u)||u.history[..u.depth].iter().any(|h|h.nod
 pub fn select(u:&mut Ui,id:usize){if id>=world::TREE.len(){return;}u.detail_node=id;u.detail=world::TREE[id].entry as usize;u.recipe=0;u.link=0;u.scroll=0;}
 pub fn recipe(u:&Ui)->Option<&'static weapon_data::Recipe>{weapon_data::WEAPONS[u.detail_node].recipes.get(u.recipe)}
 pub fn change_recipe(u:&mut Ui,forward:bool){let n=weapon_data::WEAPONS[u.detail_node].recipes.len();if n>0{u.recipe=if forward{(u.recipe+1)%n}else{(u.recipe+n-1)%n};u.link=0;}}
-pub fn open_material(u:&mut Ui,i:usize){if let Some(item)=recipe(u).and_then(|r|r.items.get(i)){if item.entry!=65535{u.link=i;enter(u,item.entry as usize);}}}
+pub fn open_material(u:&mut Ui,i:usize){if let Some(item)=recipe(u).and_then(|r|r.items.get(i)){if item.entry!=65535{u.link=i;u.tree_focus=false;u.panel_entered=true;enter(u,item.entry as usize);}}}
 pub fn tree_range(id:usize)->(usize,usize){
  let mut root=id;while world::TREE[root].parent>=0{root=world::TREE[root].parent as usize;}
  let end=(root+1..world::TREE.len()).find(|i|world::TREE[*i].parent<0).unwrap_or(world::TREE.len());(root,end)
@@ -16,12 +16,6 @@ pub fn visible_lane(row:u16,root:usize,end:usize,min_depth:u8)->usize{
  count
 }
 pub fn input(u:&mut Ui,p:u32){
- if !u.panel_entered{
-  if p&((1<<13)|(1<<12))!=0{u.tree_focus=true;}
-  if p&((1<<15)|(1<<14))!=0{u.tree_focus=false;u.panel_entered=true;u.link=0;return;}
-  if p&1!=0{u.panel_entered=true;if !u.tree_focus{u.link=0;}}
-  return;
- }
  if p&(1<<9)!=0{change_recipe(u,true);}if p&(1<<8)!=0{change_recipe(u,false);}
  if u.tree_focus{
   if p&1!=0{u.tree_focus=false;u.link=0;return;}
@@ -34,7 +28,7 @@ pub fn input(u:&mut Ui,p:u32){
    if let Some(i)=found{select(u,i);}
   }
  }else if u.link==usize::MAX{
-  if p&(1<<13)!=0{u.tree_focus=true;u.panel_entered=false;}
+  if p&(1<<13)!=0{u.tree_focus=true;u.panel_entered=true;}
   else if p&(1<<15)!=0||p&1!=0{u.link=0;}
   else if p&(1<<12)!=0{change_recipe(u,false);u.link=usize::MAX;}
   else if p&(1<<14)!=0{change_recipe(u,true);u.link=usize::MAX;}

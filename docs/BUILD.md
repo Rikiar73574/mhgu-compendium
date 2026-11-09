@@ -9,7 +9,7 @@ Populate the Cargo cache separately if building on a new machine.
 
 ## Reuse existing local generated data
 
-This preserves the six complete generated Rust modules byte-for-byte, including
+This preserves the eight complete generated Rust modules byte-for-byte, including
 all existing artwork, item/weapon metadata and game ID mappings. It copies only
 into ignored `build/`, without changing the source checkout supplied as input.
 
@@ -46,7 +46,7 @@ MHGU_TOOLCHAIN=/path/to/toolchain bash mod/build-local.sh
 
 Preparation reads English GMD name slots and minimap TEX files from the owned
 dump. All derived JSON, PNG and Rust files remain in ignored `build/`; none is a
-source-distribution input. The six generated Rust modules are copied into
+source-distribution input. The eight generated Rust modules are copied into
 Cargo's output directory by `mod/build.rs`. `build/input-manifest.json` records
 input/generated hashes without storing private input paths.
 
@@ -64,6 +64,9 @@ MHGU_GAME_DIR=/path/to/owned-game/data \
   python3 tests/arm_native_hint.py
 MHGU_GAME_DIR=/path/to/owned-game/data \
   python3 tests/arm_wishlist_remove.py
+MHGU_GAME_DIR=/path/to/owned-game/data \
+  python3 tests/arm_armor.py
+MHGU_GAME_DIR=/path/to/owned-game/data python3 tests/arm_quest.py
 ```
 
 Data/layout checks require prepared local data. The targeted ARM test uses the

@@ -1,8 +1,13 @@
 # Hunter's Compendium
 
 A standalone Forge plugin for MHGURecomp and MHGU 1.4.0. Browse items, weapon
-upgrade trees, crafting materials, gathering sources and a persistent wishlist.
-The game continues while the browser is open.
+upgrade trees, armor pieces and sets, crafting materials, gathering and monster
+reward sources, and a persistent wishlist.
+The development build also suggests unlocked quests for missing wishlist materials.
+These changes are not yet in the published v0.2.2 release.
+The game continues while the browser is open. Armor details include a native
+full-set model preview using installed texture replacements. Right stick rotates
+the preview; equipped armor and stats stay unchanged.
 
 [Download the release](https://github.com/Rikiar73574/mhgu-compendium/releases/latest)
 
@@ -18,11 +23,26 @@ Missing database records remain unavailable rather than receiving guessed source
 
 - Start + D-pad Left opens or closes the Compendium; F6 is the keyboard shortcut.
 - Xbox B selects; Xbox A goes back. LB/RB changes section.
-- X opens controller search. Desktop typing also searches.
-- R3 adds or removes a weapon recipe from the wishlist, including supported
-  native smithy upgrade screens.
+- X opens a compact QWERTY controller keyboard with live matches and clickable keys.
+  Desktop typing searches within the selected weapon type. Interface size can be
+  adjusted in the Forge settings.
+- Weapon families and sibling branches are ordered by rarity. LT/RT jumps between
+  families; Up/Down stays in the same tree column.
+- Armor can be browsed by set or equipment slot, with All/LR/HR/GR filters. Its details show defense, resistances,
+  skill points, crafting materials and the other pieces in the same set.
+  Models require a reliable mapping to the owned game dump; unmapped sets show
+  an unavailable message. No models or textures are embedded in the plugin.
+- R3 adds or removes a weapon or armor recipe from the wishlist, including supported
+  native weapon-smithy upgrade screens. Y adds the complete armor set, preserving
+  pieces already saved.
 - In Wishlist, R3 removes the selected recipe; its Remove action also works with
   the mouse. Up/Down still selects materials, and removal is always manual.
+- In Wishlist, Y opens a suggested route through eligible unlocked quests. It
+  combines gathering areas, stable monsters and quest rewards, using both the
+  game's unlock and entry-condition checks. Downloaded event quests still need
+  to meet their HR requirements. Named material quantities use shared demand
+  minus combined box/pouch stock. Generic material-point categories are excluded
+  from planning. Drop quantities are not guaranteed.
 - Material rows open their acquisition sources. The wishlist reads box and
   physical pouch inventory and stores its own `compendium_wishlist.txt` file.
 
@@ -34,7 +54,7 @@ This source includes the smithy hook compatibility change used with the
 standalone Armor Fusion plugin. The earlier patched build passed both
 load orders. This standalone build passed the complete installed mod stack on
 Linux with stock MHGURecomp commit `a272b61`, using copied saves. See the
-[validation record](docs/validation.md) for the exact artifact and coverage. All plugins share
+[validation records](docs/validation.md) and [UX validation](docs/ux-validation.md) for the exact artifact and coverage. All plugins share
 Recomp's 12 MiB plugin memory region, including their BSS and loader alignment.
 
 See [build instructions](docs/BUILD.md), [source provenance](THIRD_PARTY_NOTICES.md),

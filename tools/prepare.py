@@ -2,7 +2,7 @@
 import argparse,hashlib,json,os,shutil,subprocess,sys,tempfile
 from pathlib import Path
 from paths import ROOT,DATA,GENERATED
-from game_names import export
+from game_names import export,armor_names
 
 def replace_artwork_cache(source_root):
     artwork=(('location-art','.img'),('weapon-art','.png'))
@@ -26,13 +26,13 @@ def main():
     p.add_argument('--database',type=Path)
     p.add_argument('--game-dir',type=Path)
     p.add_argument('--art-dir',type=Path,help='local cache containing location-art/ and weapon-art/')
-    p.add_argument('--generated-dir',type=Path,help='reuse all six pre-generated Rust data files unchanged')
+    p.add_argument('--generated-dir',type=Path,help='reuse all eight pre-generated Rust data files unchanged')
     a=p.parse_args()
     DATA.mkdir(parents=True,exist_ok=True);GENERATED.mkdir(parents=True,exist_ok=True)
     if a.generated_dir:
-        modules=('catalog','world','weapon_data','item_data','map_pixels','ui_pixels')
+        modules=('quest_data','armor_data','catalog','world','weapon_data','item_data','map_pixels','ui_pixels')
         inputs=[a.generated_dir/f'{name}.rs' for name in modules]
-        if not all(path.is_file() for path in inputs):p.error('generated-dir must contain all six generated Rust modules')
+        if not all(path.is_file() for path in inputs):p.error('generated-dir must contain all eight generated Rust modules')
         for source in inputs:shutil.copyfile(source,GENERATED/source.name)
         if a.catalog:
             shutil.copyfile(a.catalog,DATA/'catalog.json')
@@ -56,11 +56,12 @@ def main():
     if a.catalog.resolve()!=destination.resolve():shutil.copyfile(a.catalog,destination)
     (DATA/'game-weapons.json').write_text(json.dumps(weapons,ensure_ascii=False))
     (DATA/'game-items.json').write_text(json.dumps(items,ensure_ascii=False))
+    (DATA/'game-armor.json').write_text(json.dumps(armor_names(table/'armorSeriesData_eng.gmd'),ensure_ascii=False))
     replace_artwork_cache(a.art_dir)
-    env=os.environ.copy();env['MHGU_DATABASE']=str(a.database.resolve())
+    env=os.environ.copy();env['MHGU_DATABASE']=str(a.database.resolve());env['MHGU_GAME_DIR']=str(a.game_dir.resolve())
     def run(name,*args):subprocess.run([sys.executable,str(ROOT/'tools'/name),*map(str,args)],env=env,check=True)
     run('extract_map_pngs.py',a.game_dir,DATA/'location-maps')
-    for script in ('world.py','embed.py','item_data.py','map_art.py','ui_art.py'):run(script)
+    for script in ('world.py','embed.py','item_data.py','armor_data.py','quest_data.py','map_art.py','ui_art.py'):run(script)
     manifest={'catalog_sha256':hashlib.sha256(a.catalog.read_bytes()).hexdigest(),
               'database_sha256':hashlib.sha256(a.database.read_bytes()).hexdigest(),
               'generated_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(GENERATED.glob('*.rs'))},
