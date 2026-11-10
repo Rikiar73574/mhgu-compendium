@@ -10,7 +10,9 @@ Populate the Cargo cache separately if building on a new machine.
 ## Reuse existing local generated data
 
 This preserves the nine complete generated Rust modules byte-for-byte, including
-all existing artwork, item/weapon metadata and game ID mappings. It copies only
+all existing artwork, item/weapon metadata and game ID mappings. Use a snapshot
+prepared for this source revision; older caches lack source targets, point
+groups or native font metrics and must be regenerated. It copies only
 into ignored `build/`, without changing the source checkout supplied as input.
 
 ```sh

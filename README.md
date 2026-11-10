@@ -3,10 +3,8 @@
 A standalone Forge plugin for MHGURecomp and MHGU 1.4.0. Browse items, weapon
 upgrade trees, armor pieces and sets, crafting materials, gathering and monster
 reward sources, and a persistent wishlist.
-The development build also suggests unlocked quests for missing wishlist materials
-and uses native MHGU frame artwork, title banners, button glyphs and proportional
-lettering.
-These changes are not yet in the published v0.2.2 release.
+Version 0.3.0 adds eligible unlocked quest suggestions, native MHGU frames and
+lettering, inline keyboard editing, and full armor browsing/wishlists.
 The game continues while the browser is open. Armor details include a native
 full-set model preview using installed texture replacements. Right stick rotates
 the preview; equipped armor and stats stay unchanged.
@@ -21,17 +19,21 @@ the preview; equipped armor and stats stay unchanged.
 Item sources include all monster drops and quest rewards available in the local
 MHGenDatabase, with LR/HR/GR, carve/capture/break conditions, reward slots,
 quantities and rates. Items can list both monster drops and quest rewards.
-Missing database records remain unavailable rather than receiving guessed sources.
+[Source coverage](docs/source-coverage.md) records 2,840 acquisition pages,
+41 internal game entries and 25 explicit data gaps; sources are never guessed.
 
 - Start + D-pad Left opens or closes the Compendium; F6 is the keyboard shortcut.
 - Xbox B selects; Xbox A goes back. LB/RB changes section.
 - X opens a compact QWERTY controller keyboard with live matches and clickable keys.
   Type directly on a physical keyboard to search inline, without opening that
-  keyboard. Searches stay within the selected weapon type. Interface size can be
+  keyboard. Selection, caret movement, cut/copy/paste and UTF-8-safe deletion are
+  supported; hints follow the active device. Searches stay within the selected
+  weapon type. Interface size can be
   adjusted in the Forge settings.
 - Weapon families and sibling branches are ordered by rarity. LT/RT jumps between
   families; Up/Down stays in the same tree column.
-- Armor can be browsed by set or equipment slot, with All/LR/HR/GR filters. Its details show defense, resistances,
+- Armor can be browsed by set or equipment slot, with rank, hunter-type and gender filters. Y changes hunter type, L3 gender
+  and LT/RT rank; keyboard equivalents are shown on screen. Its details show defense, resistances,
   skill points, crafting materials and the other pieces in the same set.
   Models require a reliable mapping to the owned game dump; unmapped sets show
   an unavailable message. No models or textures are embedded in the plugin.
@@ -44,8 +46,9 @@ Missing database records remain unavailable rather than receiving guessed source
   combines gathering areas, stable monsters and quest rewards, using both the
   game's unlock and entry-condition checks. Downloaded event quests still need
   to meet their HR requirements. Named material quantities use shared demand
-  minus combined box/pouch stock. Generic material-point categories are excluded
-  from planning. Drop quantities are not guaranteed.
+  minus combined box/pouch stock. Material-point recipes use a shared whole-item stock allocation and show
+  eligible alternatives. The suggested allocation is conservative; it does not
+  calculate an optimal shortage or expected quest runs. Drop quantities are not guaranteed.
 - Material rows open their acquisition sources. The wishlist reads box and
   physical pouch inventory and stores its own `compendium_wishlist.txt` file.
 

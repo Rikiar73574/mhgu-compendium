@@ -29,6 +29,10 @@ Monster Hunter game artwork, graphics and game text belong to CAPCOM.
   https://github.com/lick-mee/mhgu-hd-hunter-font . Converted outlines retain
   the source glyph shapes. These graphics/fonts are not relicensed as authored
   MIT code and are excluded from the source tree.
+- `tools/item-exchanges.json` and `tools/item-acquisitions.json` are offline
+  factual acquisition snapshots from Kiranico MHGU, retrieved 2026-11-09. Each
+  retains source URLs. They contain trade/gift rates, equipment byproduct
+  relationships and Meownster source facts, not downloaded page markup/art.
 - Existing scenic illustrations come from Monster Hunter Wiki; existing weapon
   renders come from Kiranico MHGen. Locally extracted minimaps come from the
   user's owned game dump. They are not included here. Original provenance notes

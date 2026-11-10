@@ -16,11 +16,15 @@ These are actual game captures, not the emulated preview renderer.
 | --- | --- | --- |
 | ![Controller search](screenshots/search.png) | ![Grouped gathering sources](screenshots/locations.png) | ![Passive material tracker](screenshots/quest-tracker.png) |
 
-## Development 0.3.0 native-style preview
+## Version 0.3.0
 
 Captured in the separate hidden test game with copied save and HD textures/font.
-These changes are not in the published v0.2.2 build. See [UX validation](ux-validation.md).
+See [UX validation](ux-validation.md) for artifact hashes and platform coverage.
 
 | Item list | Controller search | Armor preview |
 | --- | --- | --- |
 | ![Native frames and game font](screenshots/native-style-items.png) | ![Controller search](screenshots/controller-search.png) | ![Armor preview](screenshots/armor-preview.png) |
+
+| Keyboard editing (Windows executable under Wine) | Exact byproduct level | Point requirements without an eligible route |
+| --- | --- | --- |
+| ![Inline clipboard replacement](screenshots/keyboard-editing.png) | ![Wyvern Lovers level 5](screenshots/weapon-byproduct-source.png) | ![Known requirements stay visible](screenshots/point-requirements.png) |

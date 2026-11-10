@@ -13,3 +13,9 @@
  assert!(search::edit(&mut q,&mut n,"Done"));
  search::edit(&mut q,&mut n,"Clear");assert_eq!(n,0);
 }
+#[test]fn controller_delete_after_utf8_paste_keeps_complete_characters(){
+ let mut q=[0;48];let pasted="ore é🌙";q[..pasted.len()].copy_from_slice(pasted.as_bytes());let mut n=pasted.len();
+ search::edit(&mut q,&mut n,"Delete");assert_eq!(core::str::from_utf8(&q[..n]).unwrap(),"ore é");
+ search::edit(&mut q,&mut n,"Delete");assert_eq!(core::str::from_utf8(&q[..n]).unwrap(),"ore ");
+ search::edit(&mut q,&mut n,"A");assert_eq!(&q[..n],b"ore A");
+}

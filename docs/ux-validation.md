@@ -1,93 +1,90 @@
-# UX validation - 9 November 2026
+# Compendium 0.3.0 validation
 
-This development candidate is version 0.3.0. The published v0.2.2 release and
-main installed NRO were not replaced. Tests used an isolated Linux process with
-its own copied save, hidden window, zero audio volume, 30 FPS cap, low scheduling
-priority and physical controller input blocked. Its script and screenshots did
-not target the user's game.
+Verified 10 November 2026. The user's running game, installed NRO and original
+save were not changed. Runtime tests used copied saves, independent profiles,
+muted audio, low process priority and blocked physical controllers.
 
-## Candidate
+## Artifact and memory
 
-NRO SHA256: `9fe15a8b74b572a8e4b53748bfce4eb3a29577351fd7fe6a8574c7d300aa4a5c`.
+NRO SHA256: `b5382c0b183482246b9267a118b72b5a2994353c0384c9fe36f2cf9b4b1f251b`.
+The plugin occupies 9,109,504 bytes including BSS and loader alignment, inside
+its 9 MiB budget. The seven-plugin stack totals 11,927,552 bytes, leaving
+655,360 bytes in the shared 12 MiB region. Keep only one Compendium NRO.
+The stack includes Armor Fusion, damage numbers, HuntLog, key quest markers,
+MapAssist and the sharpness gauge. Loading them does not verify all combat
+features or every optional dependency.
 
-The ARM plugin occupies 8,585,216 bytes including BSS and alignment. The seven
-loaded plugins total 11,403,264 bytes, leaving 1,179,648 bytes of the 12 MiB
-region before any additional headroom reservation. The stack includes Armor
-Fusion, damage numbers, HuntLog, key quest markers, MapAssist and the sharpness
-gauge. Loading these does not verify all of their combat features.
+## Automated verification
 
-## Automated coverage
+- 48 Python checks cover data imports, source links, strict native table parsing,
+  exact armor identities, point-group joins/aliases, layout and packaging.
+- 29 Rust tests cover input capture/passive mode, inventory, spatial search,
+  UTF-8 editing, tree columns, native quest gating, shared stock and whole-unit
+  point allocation. Generated-data and formatter fixtures also compile Rust.
+- Compiled ARM interaction suites cover physical/controller search, literal
+  pasted text, cross-device UTF-8 deletion, selection/paste, device hints,
+  exact weapon-level source navigation, later-page source return, armor filters,
+  full-set wishlist actions, material focus and nested point-candidate sources.
+- Planner regressions cover empty wishlists, zero-material/missing recipes,
+  no eligible source, partial routes with every known requirement still visible,
+  and confirmation immediately after refreshing a previously valid route.
+  Old routes are cleared before the new unlock/entry scan.
 
-- 19 Python data, input, preparation, layout and packaging tests.
-- 16 Rust tests covering input capture/passive mode, inventory, spatial search,
-  sparse tree columns, family jumps, source coverage and exclusion of locked or
-  unknown quests.
-- Compiled ARM suites cover pointer/controller search, physical search scope,
-  physical typing priority over game-confirm/back bindings, mouse material-return focus, armor browsing/rank filters, additive full-set
-  wishlist entries, mixed recipe persistence, shared material demand, native
-  quest-entry checks, direct sources, removal/save-failure paths and native
-  smithy hint/category compatibility.
+The downloaded HR4 event fixture passes the story/download predicate but fails
+the native entry check for HR1. It remains excluded. The availability and entry
+predicates themselves are unchanged by this follow-up.
 
-The quest regression explicitly includes a downloaded HR4 event whose unlock
-predicate returns true. Its native entry check refuses it for the HR1 fixture.
-The planner never treats that first predicate alone as sufficient eligibility.
+## Data and behavior
 
-## Native evidence
+All 5,637 armor pieces have exact native mappings. Slot, English name, gender
+and hunter flags select identity; rarity and decoration slots independently
+validate it. The previous 5,405 IDs remain unchanged. New omissions or ambiguous
+records still fail closed.
 
-The copied character is HR1. An intentionally extended test wishlist demands
-25 Shiny Beetles; the box has 19. The real native checks suggested LR quests
-including Harvest Tour: Dunes and showed 6 still needed. The earlier erroneous
-HR4 Mario event recommendation was excluded. Stock that is shared between
-weapon and armor recipes is subtracted once from aggregate demand.
+Acquisition records cover 2,840 items; another 41 entries are identified as
+internal game data, and 25 retain explicit source-data gaps. See
+[source coverage](source-coverage.md). Native stock membership does not imply
+current unlocks, and undecoded gate/currency/quantity fields are never guessed.
 
-A full Arzuros set and an Ace set rendered using the installed HD texture
-replacements. Closing restored the temporary equipment and appearance fields; all seven
-equipped 44-byte records stayed unchanged. Native deep-copy rebuilds derived
-cache fields, so byte identity of the entire temporary object is not claimed. The native model and texture data stay in game allocations rather
-than being embedded into the NRO. Prior rotation and repeated close/restore
-coverage is documented in armor-preview.md.
+Planning includes 277 material-point groups and five aliases proven against
+nine exact weapon recipes. Named demand is reserved first from combined
+box/pouch stock. Each physical unit can then be spent once, and overpayment
+from one crafting operation cannot satisfy another. This is a feasible,
+conservative suggested allocation, not a minimum-shortage solver. The route
+covers source opportunities across at most three eligible quests; it does not
+claim expected or guaranteed hunt counts. Point rows open eligible physical
+alternatives and then their ordinary source pages.
 
-Current native [quest route](screenshots/quest-route-hr1.png) and
-[armor preview](screenshots/armor-preview.png) screenshots are included here.
-Full machine-readable evidence remains in ignored
-`build/native-preview-tests/` and `build/ux-baseline/`. ARM rasterizations are
-labelled separately from native game screenshots.
+## Native runtime evidence
 
-## Native-style and inline search follow-up
+Linux tests rendered the previously unmapped Mosgharl Brim full set with
+installed HD textures. Closing restored the seven temporary 44-byte equipment
+records; all seven equipped records stayed byte-identical. Prior Arzuros/Ace
+rendering, rotation and repeated restoration evidence is retained in
+[armor preview](armor-preview.md). Native deep-copy rebuilds derived caches,
+so byte identity of the entire temporary appearance object is not claimed.
 
-The updated native captures show the game's own window corner motifs, wooden
-title artwork, button glyphs and gold selection frames. Proportional lettering
-is prepared from locally installed native/HD game glyph masks and added through
-Forge's existing font atlas. UI frames are small cropped run-length sprites;
-full source atlases are not embedded. The UI remains a custom draw-list browser,
-not a collection of native forge widgets.
+The Windows executable also ran under Wine in a dedicated headless Gamescope
+compositor with the seven-plugin stack. Real keyboard events exercised inline
+typing, Ctrl+A selection and clipboard paste. Arzuros full-set preview rendered
+and its temporary/equipped records passed the same restoration checks. An HR1
+point-recipe fixture retained its missing G-rank quantities while correctly
+showing no eligible quest. Wine evidence is not native Windows 10/11 evidence.
+An earlier Xvfb attempt failed before game initialization because that virtual
+display lacked Vulkan presentation; it was replaced by the headless compositor.
 
-Physical typing opens inline search without the controller keyboard. Its ARM
-regression injects both J with mapped confirm and Space with mapped back; both
-characters are retained, results update, and the on-screen keyboard stays
-closed. Enter leaves editing; controller X still opens its QWERTY keyboard.
-This remains ASCII key polling, without paste, selection or IME composition.
-
-The final native-style NRO was launched with the seven-plugin stack and the
-installed HD textures/font, in the same isolated profile. Item lists, controller
-search, armor stats/materials and the rendered full set were captured. The
-native font atlas initialization completed without a new assertion or crash.
-The existing mirror-capacity warning remains as documented below.
+Representative real captures are in [screenshots](SCREENSHOTS.md); machine
+records remain in ignored `build/ux-baseline/` and private test profiles.
 
 ## Limits
 
-- Native runtime evidence in this pass is Linux. Windows and every armor set
-  have not been exhaustively exercised.
-- 232 pieces lack an unambiguous native mapping. Their stats/materials/wishlist
-  remain available; affected sets decline model preview instead of guessing IDs. Mosgharl Brim
-  was exercised in the native test to verify that fallback keeps its other details usable.
-- Planning is a bounded greedy route of up to three quests covering missing
-  named material types. It is not an optimal expected-hunt-count solver. Drop
-  quantities are not guarantees, and generic material-point categories are not
-  converted into specific ingredients automatically.
-- The old isolated host logs an ImGui mirror-capacity warning also seen before
-  this work. Views rendered, but this warning is not represented as fixed by
-  the Compendium changes. MapAssist/optional gauge warnings are also separate
-  from verification of their features.
-- Text scaling and predictable focus improve visual/input accessibility. The
-  custom draw-list UI does not yet expose a screen-reader accessibility tree.
+- Native Windows OS, every armor set, and all combat combinations were not
+  exhaustively exercised. A first-use human study has not been performed;
+  [tester tasks](usability-check.md) are provided.
+- Physical typing uses Forge's key API; paste and UTF-8-safe editing work, but
+  IME composition/native text events require additional host support.
+- The draw-list browser uses game-derived artwork/glyphs and predictable input
+  focus, but exposes no OS screen-reader accessibility tree.
+- The isolated host retains an existing ImGui mirror-capacity warning also
+  observed before this work. MapAssist/optional gauge warnings are separate
+  from verification of their features; none is represented as fixed here.

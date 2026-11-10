@@ -40,3 +40,5 @@ pub fn title(d:&imgui::DrawList,rect:[f32;4]){
  part(d,4,[0.0,0.0,96.0,64.0],[x+w-right,y,right,h],u32::MAX);
 }
 pub fn button(d:&imgui::DrawList,index:usize,rect:[f32;4]){part(d,5+index,[0.0,0.0,28.0,28.0],rect,u32::MAX);}
+
+pub fn width(size:f32,text:&str)->f32{text.chars().map(|ch|data::WIDTHS.binary_search_by_key(&(ch as u32),|v|v.0).ok().map(|i|data::WIDTHS[i].1 as f32/1024.0*size).unwrap_or(size*0.5)).sum()}

@@ -17,7 +17,7 @@ pub fn navigate(i:usize,dx:i32,dy:i32)->usize{
 }
 pub fn edit(query:&mut[u8;48],len:&mut usize,key:&str)->bool{
  match key{
-  "Done"=>return true,"Clear"=>*len=0,"Delete"=>*len=len.saturating_sub(1),
+  "Done"=>return true,"Clear"=>*len=0,"Delete"=>{*len=len.saturating_sub(1);while *len>0&&query[*len]&0xc0==0x80{*len-=1;}},
   _=>{let ch=if key=="Space"{b' '}else{key.as_bytes()[0]};if *len<query.len(){query[*len]=ch;*len+=1;}}
  }false
 }

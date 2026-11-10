@@ -176,3 +176,49 @@ def parse_item_acquisitions(soup, scrap=False):
                 groups[{'Quest': 'Quest rewards', 'Monster': 'Monster drops'}.get(kind, kind)].append(
                     (content[0], ' / '.join(content[1:]), rank, quantity, rate))
     return dict(groups)
+
+
+def native_inventory_sources(tables, names):
+    """Read exact stock membership; unknown gate/currency/quantity fields stay unused."""
+    import struct
+    if not names or len(names)%2:raise ValueError('Incomplete native item name/description pairs')
+    specs = {'shopList00.slt': (0x3f800000,16,'Item shop'),
+             'shopList01.slt': (0x3f800000,16,'Item shop'),
+             'coinTradeList.ctl': (0x3f800000,11,'Coin exchange'),
+             'lobby/tradePointItemList.tpil': (0x3f9ae148,8,'Trader point exchange'),
+             'lobby/tradePointItemSpList.tpil': (0x3f9ae148,8,'Trader point exchange'),
+             'lobby/tradeItemList.tril': (0x3f9ae148,16,'Trader')}
+    result=defaultdict(lambda:defaultdict(list))
+    for file,raw in tables.items():
+        version,size,label=specs[file]
+        if len(raw)<8:raise ValueError('Truncated native inventory: '+file)
+        actual,count=struct.unpack_from('<II',raw)
+        if actual!=version or len(raw)!=8+count*size:raise ValueError('Unsupported native inventory: '+file)
+        for index in range(count):
+            row=raw[8+index*size:8+(index+1)*size]
+            if file.startswith('shop'):
+                position,item,_,_=struct.unpack('<4I',row)
+                if position!=index:raise ValueError('Invalid native shop row order')
+                ids=[item]
+            elif file.endswith('.tril'):ids=struct.unpack('<8H',row)[::2]
+            elif file.endswith('.tpil'):ids=[struct.unpack_from('<H',row)[0]]
+            else:ids=[struct.unpack_from('<I',row)[0]]
+            for item in ids:
+                if item*2+1>=len(names):raise ValueError('Native stock item outside English name table')
+                if not item or names[item*2] in ('','(None)','DUMMY'):continue
+                value=(label,'Availability depends on stock and progression','','','')
+                if value not in result[names[item*2]][label]:result[names[item*2]][label].append(value)
+    identities=defaultdict(list)
+    for i in range(0,len(names)-1,2):
+        if names[i]:identities[names[i]].append(names[i+1])
+    internal={name for name,descriptions in identities.items() if all(d=='Program Data' for d in descriptions)}
+    for name in internal:result[name]['Internal game data'].append(('Internal game entry','Not a regular pouch item','','',''))
+    return result,internal
+
+
+def owned_inventory_sources(game):
+    from game_names import strings
+    root=game/'romfs/nativeNX'
+    paths=['shopList00.slt','shopList01.slt','coinTradeList.ctl','lobby/tradePointItemList.tpil',
+           'lobby/tradePointItemSpList.tpil','lobby/tradeItemList.tril']
+    return native_inventory_sources({p:(root/'table'/p).read_bytes() for p in paths},strings(root/'eng/table/itemData_eng.gmd'))

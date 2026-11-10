@@ -5,9 +5,11 @@ materials. The right stick rotates the model; normal material navigation and
 wishlist controls stay available. The Compendium opens in town; its existing
 passive wishlist tracker remains the hunt view.
 
-The native English GMD supplies exact slot/name matches for 5,405 of the 5,637
-database pieces. A set with an ambiguous or missing match has no model preview.
-No guessed IDs are sent to the renderer. The database's gender convention is
+The native English GMD and ASD metadata provide exact mappings for all 5,637
+database pieces. Duplicate names are distinguished by slot, gender and hunter
+flags; rarity and decoration slots validate identity independently. All 5,405
+previous unique mappings are preserved. A future ambiguous or incompatible
+record still declines preview. No guessed IDs are sent to the renderer. The database's gender convention is
 normalized to the game's convention before building a preview.
 
 ## Ownership and memory
@@ -30,10 +32,8 @@ existing native preview. Scoped destruction filters protect a newer owner's
 actor getter and camera release. Version fingerprints disable this feature if
 its native entry points do not match the supported MHGU 1.4 executable.
 
-Native model/texture allocations use game heap memory. The NRO stays at
-8,454,144 bytes (8.06 MiB), inside its 9 MiB budget. The tested seven-plugin
-combination totals 11,272,192 bytes of Forge's 12 MiB region, leaving 1,310,720
-bytes. No model library or model/texture archive is bundled.
+Native model/texture allocations use game heap memory. The final artifact and seven-plugin memory budget are recorded in
+[UX validation](ux-validation.md). No model library or model/texture archive is bundled.
 
 ## Verification
 

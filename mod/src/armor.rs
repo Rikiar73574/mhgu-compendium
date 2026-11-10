@@ -14,3 +14,6 @@ pub fn input(u:&mut Ui,p:u32){
  if p&1!=0{if let Some(m)=materials(index(u)).get(u.link){if m.entry!=65535{enter(u,m.entry as usize);}}}
  if p&((1<<12)|(1<<14))!=0{let current=index(u);let a=&armor_data::ARMOR[current];let mut family=[usize::MAX;5];for(i,s)in armor_data::ARMOR.iter().enumerate(){if s.family==a.family{family[s.slot as usize]=i;}}let down=p&(1<<14)!=0;for step in 1..=5{let slot=(a.slot as usize+if down{step}else{5-step})%5;if family[slot]!=usize::MAX{u.detail=catalog::ENTRIES.len()+family[slot];u.link=0;break;}}}
 }
+
+pub fn hunter_filter(u:&Ui)->&'static str{["Type: All","Type: Blademaster","Type: Gunner"][(u.armor_hunter+1)as usize]}
+pub fn gender_filter(u:&Ui)->&'static str{["Gender: All","Gender: Male","Gender: Female"][(u.armor_gender+1)as usize]}

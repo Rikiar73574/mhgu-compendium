@@ -1,8 +1,8 @@
 from paths import ROOT,DATA,GENERATED,database
 """Build shared, structured acquisition views for every item entry."""
-import json,sqlite3,collections,textwrap
+import json,sqlite3,collections,textwrap,os
 from catalog import monster_sources,quest_sources
-from item_sources import database_sources,byproduct_sources,description_sources,exchange_sources
+from item_sources import database_sources,byproduct_sources,description_sources,exchange_sources,owned_inventory_sources
 from pathlib import Path
 root=Path(__file__).resolve().parents[1];cat=json.loads((DATA/'catalog.json').read_text());places=json.loads((DATA/'locations.json').read_text());db=database();db.row_factory=sqlite3.Row
 meta={r['name']:dict(r) for r in db.execute('select name,description,carry_capacity,buy,sell,icon_name from items')};locs={p['_id']:(i,p['name']) for i,p in enumerate(places['locations'])};gather=collections.defaultdict(list)
@@ -10,15 +10,16 @@ for r in places['gathering']:
  if not r['supply']:gather[r['name']].append(r)
 drops=monster_sources(db)
 quest_drops=quest_sources(db)
+native,internal=owned_inventory_sources(Path(os.environ["MHGU_GAME_DIR"])) if os.environ.get("MHGU_GAME_DIR") else ({},set())
 supplemental=database_sources(db)
-for source in (byproduct_sources(cat),description_sources(meta),exchange_sources(json.loads((root/'tools/item-exchanges.json').read_text()),cat)):
+for source in (native,byproduct_sources(cat),description_sources(meta),exchange_sources(json.loads((root/'tools/item-exchanges.json').read_text()),cat)):
  for name,groups in source.items():
   for kind,rows in groups.items():supplemental[name][kind].extend(rows)
 page_snapshot=json.loads((root/'tools/item-acquisitions.json').read_text())
 for identity,page in page_snapshot['items'].items():
  if identity not in cat['items'] or cat['items'][identity]['name']!=page['name']:raise ValueError('Acquisition page identity mismatch: '+identity)
  for kind,rows in page['groups'].items():supplemental[page['name']][kind].extend(tuple(row) for row in rows)
-coverage={"total_items":len(cat["items"]),"with_sources":0,"without_sources":0,"source_rows":0,"linked_source_rows":0,"source_groups":collections.Counter(),"supplemental_sources":{},"residual_reasons":collections.Counter(),"missing":[]}
+coverage={"total_items":len(cat["items"]),"with_sources":0,"classified_internal":0,"without_sources":0,"source_rows":0,"linked_source_rows":0,"source_groups":collections.Counter(),"supplemental_sources":{},"residual_reasons":collections.Counter(),"missing":[]}
 for name,groups in supplemental.items():
  for kind,rows in groups.items():
   counts=coverage['supplemental_sources'].setdefault(kind,{'items':0,'rows':0})
@@ -60,7 +61,9 @@ for item in sorted(cat['items'].values(),key=lambda r:r['name']):
   other[source['kind']].append((label,' / '.join(rest),source.get('rank') or '',qty,rate))
  for kind,rows in other.items():groups.append(({'Quest':'Quest rewards','Monster':'Monster drops'}.get(kind,kind),-1,list(dict.fromkeys(rows))))
  for kind,rows in supplemental[item['name']].items():groups.append((kind,-1,list(dict.fromkeys(rows))))
- if groups:
+ if item['name'] in internal:
+  coverage['classified_internal']+=1
+ elif groups:
   coverage['with_sources']+=1
   coverage['source_groups'].update(name for name,_,_ in groups)
  else:
@@ -89,7 +92,7 @@ coverage['interned_text_entries']=len(strings)
 coverage['row_storage_bytes']=coverage['source_rows']*10
 coverage['target_storage_bytes']=len(strings)*2
 (DATA/'item-source-coverage.json').write_text(json.dumps(coverage,ensure_ascii=False,indent=2)+'\n')
-print(f"Item source coverage: {coverage['with_sources']}/{coverage['total_items']}; missing {coverage['without_sources']}")
+print(f"Item source coverage: {coverage['with_sources']}/{coverage['total_items']}; internal entries {coverage['classified_internal']}; missing {coverage['without_sources']}")
 (GENERATED/'item_data.rs').write_text('\n'.join(out));print('Structured item views:',len(cat['items']))
 # Browsing categories use explicit database icon/type metadata, not name guesses.
 names=['Supplies & tools','Plants & mushrooms','Ores & bones','Insects & fish','Monster materials','Decorations','Tickets & coins','Scraps','Other items']
