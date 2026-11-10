@@ -53,6 +53,7 @@ fn activate(u:&mut Ui){
  let(lx,ly)=Input::get_stick_l();if lx< -0.5{b|=1<<12;}if lx>0.5{b|=1<<14;}if ly>0.5{b|=1<<13;}if ly< -0.5{b|=1<<15;}
  let mut p=b&!u.last;let dt=imgui::get_io().DeltaTime.min(0.1);if b==u.last&&b&0xf000!=0{u.repeat+=dt;if u.repeat>0.4{p|=b&0xf000;u.repeat=0.32;}}else{u.repeat=0.0;}u.last=b;
  if Input::is_key_pressed(forge::input::Key::F6){input::toggle();}
+ desktop::mouse_free(input::open()&&context::location().is_none());
  let smith=smithy::frame();if !input::open(){if let Some((node,recipe))=smith{if p&(1<<5)!=0{wishlist::toggle(node,recipe);u.dirty=true;}}u.was_open=false;return;}
  inventory::refresh(dt,!u.was_open);
  if let Some((loc,rank))=context::location(){wishlist::load();u.was_open=true;u.current=Some(loc);view::wish_tracker(loc,rank);return;}

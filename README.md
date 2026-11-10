@@ -1,6 +1,6 @@
 # Hunter's Compendium
 
-A standalone Forge plugin for MHGURecomp and MHGU 1.4.0. Browse items, weapon
+A standalone Forge plugin for MHGURecomp 0.15.4 or later and MHGU 1.4.0. Browse items, weapon
 upgrade trees, armor pieces and sets, crafting materials, gathering and monster
 reward sources, and a persistent wishlist.
 Version 0.3.0 adds eligible unlocked quest suggestions, native MHGU frames and
@@ -24,6 +24,9 @@ quantities and rates. Items can list both monster drops and quest rewards.
 
 - Start + D-pad Left opens or closes the Compendium; F6 is the keyboard shortcut.
 - Xbox B selects; Xbox A goes back. LB/RB changes section.
+- MHGURecomp 0.15.4 or later keeps the mouse free while browsing. Clicking the
+  Compendium does not capture it; Escape retains the game's mouse-release shortcut.
+  The passive hunt tracker leaves mouse-look controls unchanged.
 - X opens a compact QWERTY controller keyboard with live matches and clickable keys.
   Type directly on a physical keyboard to search inline, without opening that
   keyboard. Selection, caret movement, cut/copy/paste and UTF-8-safe deletion are

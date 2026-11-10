@@ -88,3 +88,16 @@ records remain in ignored `build/ux-baseline/` and private test profiles.
 - The isolated host retains an existing ImGui mirror-capacity warning also
   observed before this work. MapAssist/optional gauge warnings are separate
   from verification of their features; none is represented as fixed here.
+
+### Mouse capture regression (10 November 2026)
+
+The installed MHGURecomp 0.15.4 Windows executable under Wine was tested on a
+private headless display. Clicking the v0.3.0 browser reproduced relative mouse
+capture. The fix uses `forge_input_setMouseFree` only on interactive-browser
+ownership transitions. Repeated frames and the passive hunt tracker do not
+assert ownership. Compiled ARM regressions cover open, Escape, toggle close,
+idle frames and entering a quest. Native host-state checks confirm browser
+clicks remain free, closing clears the request, gameplay clicks capture again,
+and Escape releases the mouse after closing. Physical keyboard selection,
+clipboard replacement and UTF-8 deletion regressions also pass. The user's
+running game was neither restarted nor sent test input.
