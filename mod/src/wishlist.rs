@@ -1,6 +1,6 @@
 use core::{cell::UnsafeCell,fmt::Write};
 use super::{weapon_data,world,Text};
-#[path="storage.rs"]mod storage;
+use super::storage;
 const FILE:storage::Location=storage::Location{path:c"savedata:/compendium_wishlist.txt",display:"Compendium wishlist",defaults:""};
 #[derive(Clone,Copy)]pub struct Wish{pub node:usize,pub recipe:usize}
 const EMPTY:Wish=Wish{node:usize::MAX,recipe:0};

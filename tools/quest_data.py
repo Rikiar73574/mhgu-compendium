@@ -1,5 +1,5 @@
 """Offline quest coverage joins; source IDs are never game item IDs."""
-import json,collections,os,struct
+import json,collections,os,struct,re
 from pathlib import Path
 from paths import DATA,GENERATED,database
 
@@ -35,14 +35,24 @@ def point_groups(db,item_ids):
     if len(groups)>=0x7fff or len(set(names.values()))!=len(names):raise ValueError('Ambiguous/excessive point groups')
     return [(names[g],sorted(m.items(),key=lambda r:(membership[r[0]],r[0]))) for g,m in sorted(groups.items())]
 
+def target_monsters(goal,roster,monsters):
+    """Exact objective names only; incidental and unstable spawns are not targets."""
+    all_large=re.fullmatch(r'(?:Hunt|Slay|Capture) all large monsters(?:, not including (.+))?',goal)
+    if all_large:
+        excluded=all_large[1]
+        return [m for m in sorted(roster) if monsters[m][2]=='0' and monsters[m][1]!=excluded]
+    if not re.match(r'^(?:Hunt|Slay|Capture|Repel)\b',goal):return []
+    matches=[(m,hit.span()) for m in sorted(roster) for hit in re.finditer(r'(?<!\w)'+re.escape(monsters[m][1])+r'(?!\w)',goal)]
+    return sorted({m for m,(a,b) in matches if not any(c<=a and b<=d and (a,b)!=(c,d) for _,(c,d) in matches)})
+
 def emit(db,catalog,locations,quest_dir):
     item_ids={r['name']:i for i,r in enumerate(sorted(catalog['items'].values(),key=lambda r:r['name']))}
     locations_by_id={r['_id']:i for i,r in enumerate(locations['locations'])}
     ranks={'LR':0,'HR':1,'G':2}
-    quests=[r for r in db.execute('select _id,name,location_id,rank,stars,hub from quests order by _id') if r[2] in locations_by_id and r[3] in ranks]
+    quests=[r for r in db.execute('select _id,name,location_id,rank,stars,hub,hunter_type,goal from quests order by _id') if r[2] in locations_by_id and r[3] in ranks]
     assert len(quests)<=1500
     indices={q[0]:i for i,q in enumerate(quests)}
-    monster_rows=list(db.execute('select _id,name from monsters order by _id'))
+    monster_rows=list(db.execute('select _id,name,class from monsters order by _id'))
     monsters={r[0]:i for i,r in enumerate(monster_rows)}
     assert len(monsters)<256
     stable=collections.defaultdict(set)
@@ -64,15 +74,17 @@ def emit(db,catalog,locations,quest_dir):
     q=lambda s:json.dumps(s,ensure_ascii=False)
     out=['// Generated local facts from MHGenDatabase; availability is checked live.',
          'use super::quest::{Quest,Source,PointGroup};','pub static QUESTS:&[Quest]=&[']
-    for id,name,loc,rank,stars,hub in quests:
+    for id,name,loc,rank,stars,hub,hunter_type,goal in quests:
+        if hunter_type not in (0,1):raise ValueError(f"Unknown hunter type for quest {id}: {hunter_type}")
         roster=','.join(map(str,sorted(stable[id])))
+        targets=','.join(map(str,target_monsters(goal,stable[id],monster_rows)))
         p=quest_dir/f'questData_{id:07d}.ext'
         data=p.read_bytes() if p.is_file() else b''
         entry=list(data[0x1a:0x1d]) if len(data)>=29 and data[:4]==b'\x00\x00KC' and struct.unpack_from('<I',data,12)[0]==id else [255,255,255]
-        out.append(f'Quest{{entry:{entry},id:{id},name:{q(name)},loc:{locations_by_id[loc]},rank:{ranks[rank]},stars:{stars},hub:{q(hub)},monsters:&[{roster}]}},')
+        out.append(f'Quest{{entry:{entry},id:{id},name:{q(name)},loc:{locations_by_id[loc]},rank:{ranks[rank]},stars:{stars},hub:{q(hub)},prowler:{str(hunter_type==1).lower()},targets:&[{targets}],monsters:&[{roster}]}},')
     out+= ['];','pub static SOURCES:&[Source]=&[']
     out += [f'Source{{item:{i},entity:{e},rank:{r},kind:{k},zone:{z}}},' for i,e,r,k,z in sorted(sources)]
-    out+= ['];','pub static MONSTERS:&[&str]=&['+','.join(q(n) for _,n in monster_rows)+'];']
+    out+= ['];','pub static MONSTERS:&[&str]=&['+','.join(q(n) for _,n,_ in monster_rows)+'];']
     out+= ['pub static POINT_GROUPS:&[PointGroup]=&[']
     groups=point_groups(db,item_ids)
     for name,members in groups:

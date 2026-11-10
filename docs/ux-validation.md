@@ -101,3 +101,20 @@ clicks remain free, closing clears the request, gameplay clicks capture again,
 and Escape releases the mouse after closing. Physical keyboard selection,
 clipboard replacement and UTF-8 deletion regressions also pass. The user's
 running game was neither restarted nor sent test input.
+
+### Quest preferences and objective ranking (10 November 2026)
+
+Prowler suggestions are disabled by default and can be enabled in the existing
+Forge settings panel. `compendium_settings.ini` is independent of the wishlist.
+Compiled ARM tests exercise default exclusion, enabling and disabling while a
+route is open, immediate stale-route removal, persistence in fresh sessions and
+unchanged wishlist bytes. Existing native unlock/entry checks remain in place.
+
+Objective targets are generated separately from guaranteed monster appearances.
+Exact objective names and explicit all-large-monster objectives establish the
+bonus; delivery objectives, unstable spawns and nested base-species matches do
+not. Equal-coverage routes prefer needed target-monster sources before rank and
+stars. A real-data Gammoth Pelt test selects quest 508 over 324 when both are
+available and falls back to 324 when 508 is locked. Incidental monster sources
+are identified in the UI. 53 Python checks, 14 planner Rust tests, three settings
+Rust tests and the compiled ARM preference/unlock/mouse regressions pass.

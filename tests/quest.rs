@@ -1,9 +1,9 @@
 #[path="../mod/src/quest.rs"]mod quest;
 use quest::{Quest,Source,Need};
 static QUESTS:[Quest;3]=[
- Quest{entry:[0;3],id:101,name:"Locked ideal",loc:0,rank:1,stars:4,hub:"Guild",monsters:&[1,2]},
- Quest{entry:[0;3],id:102,name:"Available pair",loc:0,rank:1,stars:4,hub:"Guild",monsters:&[1,2]},
- Quest{entry:[0;3],id:103,name:"Wrong rank",loc:0,rank:0,stars:2,hub:"Village",monsters:&[1]},
+ Quest{entry:[0;3],id:101,name:"Locked ideal",loc:0,rank:1,stars:4,hub:"Guild",prowler:false,targets:&[],monsters:&[1,2]},
+ Quest{entry:[0;3],id:102,name:"Available pair",loc:0,rank:1,stars:4,hub:"Guild",prowler:false,targets:&[],monsters:&[1,2]},
+ Quest{entry:[0;3],id:103,name:"Wrong rank",loc:0,rank:0,stars:2,hub:"Village",prowler:false,targets:&[],monsters:&[1]},
 ];
 static SOURCES:[Source;4]=[
  Source{item:10,entity:0,rank:1,kind:0,zone:2}, // gather on map 0
@@ -36,7 +36,7 @@ static GROUPS:[quest::PointGroup;3]=[
  assert!(quest::covers_group(1,&QUESTS[1],0x8000,&SOURCES,&GROUPS));
  assert!(!quest::covers_group(2,&QUESTS[2],0x8000,&SOURCES,&GROUPS));
  assert!(!quest::covers_group(1,&QUESTS[1],65535,&SOURCES,&GROUPS));
- assert_eq!(quest::best_groups(&QUESTS,&SOURCES,&needs,&[false,true,false],&[],&GROUPS),Some((1,1)));
+ assert_eq!(quest::best_groups(&QUESTS,&SOURCES,&needs,&[false,true,false],&[],&GROUPS,false),Some((1,1)));
 }
 #[test]fn named_stock_is_reserved_before_overlapping_point_groups(){
  let mut stock=[Some(0);14];stock[10]=Some(3);
@@ -97,4 +97,22 @@ static GROUPS:[quest::PointGroup;3]=[
  assert_eq!(quest::selected_route(&old,3,2,3),None);
  assert_eq!(quest::selected_route(&old,4,0,3),None);
  assert_eq!(quest::selected_route(&old,1,0,3),Some(1));
+}
+
+#[test]fn prowler_suggestions_are_opt_in_and_keep_unlock_gate(){
+ let mut quests=[Quest{entry:[0;3],id:1,name:"Hunter",loc:0,rank:1,stars:4,hub:"Village",prowler:false,targets:&[],monsters:&[1]},Quest{entry:[0;3],id:2,name:"Cat",loc:0,rank:1,stars:1,hub:"Village",prowler:true,targets:&[],monsters:&[1,2]}];
+ let needs=[Need{item:0,quantity:1},Need{item:1,quantity:1}];
+ let sources=[Source{item:0,entity:1,rank:1,kind:1,zone:0},Source{item:1,entity:2,rank:1,kind:1,zone:0}];
+ assert_eq!(quest::best_groups(&quests,&sources,&needs,&[true,true],&[],&[],false),Some((0,1)));
+ assert_eq!(quest::best_groups(&quests,&sources,&needs,&[true,true],&[],&[],true),Some((1,2)));
+ assert_eq!(quest::best_groups(&quests,&sources,&needs,&[true,false],&[],&[],true),Some((0,1)));
+ quests[0].prowler=true;
+ assert_eq!(quest::best_groups(&quests,&sources,&needs,&[true,true],&[],&[],false),None);
+}
+
+#[test]fn target_hunt_beats_incidental_encounter_at_equal_coverage(){
+ let quests=[Quest{entry:[0;3],id:324,name:"No Go on the Popo",loc:0,rank:0,stars:3,hub:"Village",prowler:false,targets:&[],monsters:&[83]},Quest{entry:[0;3],id:508,name:"The Unwavering Colossus",loc:0,rank:0,stars:5,hub:"Village",prowler:false,targets:&[83],monsters:&[83]}];
+ let sources=[Source{item:0,entity:83,rank:0,kind:1,zone:0}];let needs=[Need{item:0,quantity:3}];
+ assert_eq!(quest::best_groups(&quests,&sources,&needs,&[true,true],&[],&[],false),Some((1,1)));
+ assert_eq!(quest::best_groups(&quests,&sources,&needs,&[true,false],&[],&[],false),Some((0,1)));
 }

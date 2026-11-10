@@ -1,6 +1,6 @@
 //! Quest coverage is factual; quantities are goals, never promised drops.
 #[derive(Clone,Copy)]pub struct Need{pub item:u16,pub quantity:u32}
-pub struct Quest{pub entry:[u8;3],pub id:u32,pub name:&'static str,pub loc:u8,pub rank:u8,pub stars:u8,pub hub:&'static str,pub monsters:&'static[u8]}
+pub struct Quest{pub entry:[u8;3],pub id:u32,pub name:&'static str,pub loc:u8,pub rank:u8,pub stars:u8,pub hub:&'static str,pub prowler:bool,pub targets:&'static[u8],pub monsters:&'static[u8]}
 pub struct Source{pub item:u16,pub entity:u16,pub rank:u8,pub kind:u8,pub zone:u8}
 pub const POINT_BASE:u16=0x8000;
 pub struct PointGroup{pub name:&'static str,pub members:&'static [(u16,u16)]}
@@ -43,14 +43,19 @@ pub fn covers(index:usize,q:&Quest,item:u16,sources:&[Source])->bool{
   0=>s.entity==q.loc as u16,1=>q.monsters.contains(&(s.entity as u8)),2=>s.entity as usize==index,_=>false,
  })
 }
-pub fn best(quests:&[Quest],sources:&[Source],needs:&[Need],unlocked:&[bool],exclude:&[usize])->Option<(usize,usize)>{
- best_groups(quests,sources,needs,unlocked,exclude,&[])
+fn target_source(q:&Quest,item:u16,sources:&[Source],groups:&[PointGroup])->bool{
+ if let Some(g)=point_group(item,groups){return g.members.iter().any(|&(i,_)|i<POINT_BASE&&target_source(q,i,sources,&[]));}
+ let start=sources.partition_point(|s|s.item<item);sources[start..].iter().take_while(|s|s.item==item).any(|s|s.rank==q.rank&&s.kind==1&&q.targets.contains(&(s.entity as u8)))
 }
-pub fn best_groups(quests:&[Quest],sources:&[Source],needs:&[Need],unlocked:&[bool],exclude:&[usize],groups:&[PointGroup])->Option<(usize,usize)>{
- let mut best:Option<(usize,usize)>=None;
- for(i,q)in quests.iter().enumerate(){if !unlocked.get(i).copied().unwrap_or(false)||exclude.contains(&i){continue;}
+pub fn best(quests:&[Quest],sources:&[Source],needs:&[Need],unlocked:&[bool],exclude:&[usize])->Option<(usize,usize)>{
+ best_groups(quests,sources,needs,unlocked,exclude,&[],false)
+}
+pub fn best_groups(quests:&[Quest],sources:&[Source],needs:&[Need],unlocked:&[bool],exclude:&[usize],groups:&[PointGroup],include_prowler:bool)->Option<(usize,usize)>{
+ let mut best:Option<(usize,usize)>=None;let mut best_targets=0;
+ for(i,q)in quests.iter().enumerate(){if q.prowler&&!include_prowler||!unlocked.get(i).copied().unwrap_or(false)||exclude.contains(&i){continue;}
   let count=needs.iter().filter(|n|n.quantity>0&&covers_group(i,q,n.item,sources,groups)).count();if count==0{continue;}
-  if best.is_none_or(|(old,n)|count>n||count==n&&(q.rank,q.stars)<(quests[old].rank,quests[old].stars)){best=Some((i,count));}
+  let targets=needs.iter().filter(|n|n.quantity>0&&target_source(q,n.item,sources,groups)).count();
+  if best.is_none_or(|(old,n)|count>n||count==n&&(targets>best_targets||targets==best_targets&&(q.rank,q.stars)<(quests[old].rank,quests[old].stars))){best=Some((i,count));best_targets=targets;}
  }best
 }
 
@@ -95,7 +100,7 @@ pub fn best_groups(quests:&[Quest],sources:&[Source],needs:&[Need],unlocked:&[bo
   for i in s.progress..(s.progress+16).min(quest_data::QUESTS.len()){
    s.available[i]=f(quest_data::QUESTS[i].id,255,0)&255==1&&eligible(&quest_data::QUESTS[i]);s.progress=i+1;
   }
-  if s.progress==quest_data::QUESTS.len(){s.material=0;s.remaining=s.needs;for _ in 0..3{let Some((i,_))=best_groups(quest_data::QUESTS,quest_data::SOURCES,&s.remaining[..s.count],&s.available[..quest_data::QUESTS.len()],&s.route[..s.len],quest_data::POINT_GROUPS)else{break;};s.route[s.len]=i;s.len+=1;for n in &mut s.remaining[..s.count]{if covers_group(i,&quest_data::QUESTS[i],n.item,quest_data::SOURCES,quest_data::POINT_GROUPS){n.quantity=0;}}}}
+  if s.progress==quest_data::QUESTS.len(){s.material=0;s.remaining=s.needs;for _ in 0..3{let Some((i,_))=best_groups(quest_data::QUESTS,quest_data::SOURCES,&s.remaining[..s.count],&s.available[..quest_data::QUESTS.len()],&s.route[..s.len],quest_data::POINT_GROUPS,crate::settings::include_prowler())else{break;};s.route[s.len]=i;s.len+=1;for n in &mut s.remaining[..s.count]{if covers_group(i,&quest_data::QUESTS[i],n.item,quest_data::SOURCES,quest_data::POINT_GROUPS){n.quantity=0;}}}}
  }}
  pub fn covered()->usize{let s=state();s.needs[..s.count].iter().filter(|n|s.route[..s.len].iter().any(|i|covers_group(*i,&quest_data::QUESTS[*i],n.item,quest_data::SOURCES,quest_data::POINT_GROUPS))).count()}
  pub fn uncovered()->impl Iterator<Item=&'static Need>{let s=state();s.needs[..s.count].iter().filter(|n|!s.route[..s.len].iter().any(|i|covers_group(*i,&quest_data::QUESTS[*i],n.item,quest_data::SOURCES,quest_data::POINT_GROUPS)))}
@@ -125,7 +130,7 @@ pub fn best_groups(quests:&[Quest],sources:&[Source],needs:&[Need],unlocked:&[bo
   let start=quest_data::SOURCES.partition_point(|s|s.item<item);
   for s in quest_data::SOURCES[start..].iter().take_while(|s|s.item==item){if s.rank!=q.rank{continue;}match s.kind{0 if s.entity==q.loc as u16=>zones[s.zone as usize]=true,1 if q.monsters.contains(&(s.entity as u8))=>monster=true,2 if s.entity as usize==qid=>reward=true,_=>{}}}
   for(i,&yes)in zones.iter().enumerate(){if yes{let sep=if t.str().is_empty(){""}else{", "};let _=write!(t,"{}{}",sep,world::ZONES[i]);}}
-  if monster{let sep=if t.str().is_empty(){""}else{" / "};let _=write!(t,"{}Monster drops",sep);}if reward{let sep=if t.str().is_empty(){""}else{" / "};let _=write!(t,"{}Quest rewards",sep);}t
+  if monster{let sep=if t.str().is_empty(){""}else{" / "};let _=write!(t,"{}{}",sep,if target_source(q,item,quest_data::SOURCES,&[]){"Target monster drops"}else{"Incidental monster drops"});}if reward{let sep=if t.str().is_empty(){""}else{" / "};let _=write!(t,"{}Quest rewards",sep);}t
  }
 }
 #[cfg(not(test))]pub use live::*;

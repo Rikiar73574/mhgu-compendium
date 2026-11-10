@@ -45,10 +45,14 @@ quantities and rates. Items can list both monster drops and quest rewards.
   pieces already saved.
 - In Wishlist, R3 removes the selected recipe; its Remove action also works with
   the mouse. Up/Down still selects materials, and removal is always manual.
+- Forge settings has a persistent **Include Prowler quests** toggle, off by default.
+  Changing it immediately refreshes an open quest route. Settings are stored in
+  `compendium_settings.ini`, separately from the wishlist.
 - In Wishlist, Y opens a suggested route through eligible unlocked quests. It
   combines gathering areas, stable monsters and quest rewards, using both the
   game's unlock and entry-condition checks. Downloaded event quests still need
-  to meet their HR requirements. Named material quantities use shared demand
+  to meet their HR requirements. At equal material coverage, hunts targeting the needed monster rank above
+  incidental encounters, before rank/star tie-breaks. Named material quantities use shared demand
   minus combined box/pouch stock. Material-point recipes use a shared whole-item stock allocation and show
   eligible alternatives. The suggested allocation is conservative; it does not
   calculate an optimal shortage or expected quest runs. Drop quantities are not guaranteed.

@@ -28,10 +28,10 @@ class PointGroups(unittest.TestCase):
  def test_generated_rust_group_tables_type_check(self):
   d=self.db();names=['LR Jaggi Materials','G Jaggi Materials','LR Ore Materials','HR Ore Materials','G Ore Materials'];keys=[1966118,1966120,1966084,1966085,1966086]
   d.executemany('insert into items values(?,?)',zip(keys,names));d.executemany('insert into item_to_material values(10,?,4)',[(k,) for k in keys])
-  d.executescript('CREATE TABLE quests(_id,name,location_id,rank,stars,hub);CREATE TABLE monsters(_id,name);CREATE TABLE monster_to_quest(monster_id,quest_id,unstable);CREATE TABLE hunting_rewards(item_id,monster_id,rank,percentage);CREATE TABLE quest_rewards(item_id,quest_id,percentage);')
+  d.executescript('CREATE TABLE quests(_id,name,location_id,rank,stars,hub,hunter_type,goal);CREATE TABLE monsters(_id,name,class);CREATE TABLE monster_to_quest(monster_id,quest_id,unstable);CREATE TABLE hunting_rewards(item_id,monster_id,rank,percentage);CREATE TABLE quest_rewards(item_id,quest_id,percentage);')
   with tempfile.TemporaryDirectory() as t:
    p=Path(t);generated=quest_data.emit(d,{'items':{'a':{'name':'Shell'},'b':{'name':'Bone'}}},{'locations':[],'gathering':[]},p)
-   types='mod quest{pub struct Quest{pub entry:[u8;3],pub id:u32,pub name:&\'static str,pub loc:u8,pub rank:u8,pub stars:u8,pub hub:&\'static str,pub monsters:&\'static[u8]}pub struct Source{pub item:u16,pub entity:u16,pub rank:u8,pub kind:u8,pub zone:u8}pub struct PointGroup{pub name:&\'static str,pub members:&\'static[(u16,u16)]}}'
+   types='mod quest{pub struct Quest{pub entry:[u8;3],pub id:u32,pub name:&\'static str,pub loc:u8,pub rank:u8,pub stars:u8,pub hub:&\'static str,pub prowler:bool,pub targets:&\'static[u8],pub monsters:&\'static[u8]}pub struct Source{pub item:u16,pub entity:u16,pub rank:u8,pub kind:u8,pub zone:u8}pub struct PointGroup{pub name:&\'static str,pub members:&\'static[(u16,u16)]}}'
    (p/'groups.rs').write_text(types+'mod data{'+generated+'}')
    result=subprocess.run(['rustc','+nightly','--edition','2024','--crate-type','lib','--emit','metadata',str(p/'groups.rs'),'-o',str(p/'groups.rmeta')],capture_output=True,text=True)
    self.assertEqual(result.returncode,0,result.stderr)
