@@ -1,5 +1,9 @@
 //! Pure, bounded decoding of a copied native MHGU cPop record.
 pub const CAPACITY: usize = 128;
+// Native Old Pickaxe / Mega Pickaxe share the pickaxe artwork, with the
+// game's grey / gold palettes. Appearance follows the point, not its loot.
+pub const MINING_GREY:u16=57;
+pub const MINING_GOLD:u16=59;
 pub struct Point { pub pos: [f32;4], pub area: u8, pub kind: u32, pub forced: u16 }
 
 fn word(raw: &[u8], offset: usize) -> u32 {
@@ -23,7 +27,7 @@ pub fn point(raw: &[u8], vtable: u32) -> Option<Point> {
 fn valid_item(item: u16) -> bool { (1..=2990).contains(&item) }
 pub fn icon(point: &Point, drops: Option<&[u8]>) -> Option<u16> {
     let known=match point.kind {
-        11|12|30=>Some(271),9|10=>Some(318),21..=28=>Some(385),
+        11|12|30=>Some(271),9=>Some(MINING_GREY),10=>Some(MINING_GOLD),21..=28=>Some(385),
         1|2=>Some(98),3|4=>Some(272),5|6=>Some(292),7|8=>Some(410),_=>None,
     };
     if known.is_some() { return known; }

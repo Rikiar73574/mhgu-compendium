@@ -3,6 +3,8 @@ mod gather;
 use gather::{Point, icon, point};
 
 const VTABLE: u32 = 0x0195_23e0;
+const MINING_GREY:u16=57;
+const MINING_GOLD:u16=59;
 fn raw() -> [u8; 0x80] {
     let mut raw = [0; 0x80];
     raw[..4].copy_from_slice(&VTABLE.to_le_bytes());
@@ -72,7 +74,7 @@ fn stale_identity_bad_room_and_bad_coordinates_are_rejected() {
 #[test]
 fn native_gathering_kinds_have_verified_representative_icons() {
     for (kinds, item) in [
-        (&[11,12,30][..],271), (&[9,10][..],318),
+        (&[11,12,30][..],271), (&[9][..],MINING_GREY), (&[10][..],MINING_GOLD),
         (&[21,22,23,24,25,26,27,28][..],385),
         (&[1,2][..],98), (&[3,4][..],272), (&[5,6][..],292), (&[7,8][..],410),
     ] {
@@ -81,6 +83,16 @@ fn native_gathering_kinds_have_verified_representative_icons() {
     assert_eq!(icon(&node(11, 318), None), Some(271));
     assert_eq!(icon(&node(0, 0), None), None);
     assert_eq!(icon(&node(500, 0), None), None);
+}
+
+#[test]
+fn mining_appearance_follows_native_spot_type_not_its_drops() {
+    let ores=drops(&[(50,1,318),(50,1,324),(255,0,0)]);
+    let grey=icon(&node(9,324),Some(&ores));
+    let gold=icon(&node(10,318),Some(&ores));
+    assert_eq!(grey,Some(MINING_GREY));
+    assert_eq!(gold,Some(MINING_GOLD));
+    assert_ne!(grey,gold);
 }
 
 #[test]

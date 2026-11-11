@@ -205,3 +205,19 @@ hidden. Closing retained those six. Selecting Mining showed thirteen mining
 sprites, and clearing it hid them. Map Assist's Bulldrome marker remained visible.
 The NRO footprint is 9,175,040 bytes, below its 9 MiB budget. This does not expand
 the earlier validation to physical Windows or every map/rank combination.
+
+### Mining icon colours (11 November 2026)
+
+Mining visual types 9 and 10 now select the game's grey and gold pickaxe item
+icons (native IDs 57 and 59), through the unchanged native item renderer. Owned
+item data confirms both use glyph 21 with palettes 10 and 4. Appearance follows
+the native point type, independently of its selected or likely drops.
+
+The isolated Ruined Pinnacle HR test with Map Assist active rendered eleven
+grey and two gold mining icons. All four vertex colours matched the game's
+palettes (`0xffaaaaaa` and `0xff65cff7`), and both used the same native pickaxe UV
+rectangle. Nine pure gathering tests and the compiled ARM marker suite pass;
+the latter checks grey/gold changes in a reused slot without a new allocation.
+Checklist, native Start-menu and packaging regressions also pass. The aligned
+plugin footprint remains 9,175,040 bytes. Other maps/ranks and physical Windows
+were not retested for this change.
