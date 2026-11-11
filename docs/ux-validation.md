@@ -118,3 +118,54 @@ stars. A real-data Gammoth Pelt test selects quest 508 over 324 when both are
 available and falls back to 324 when 508 is locked. Incidental monster sources
 are identified in the UI. 53 Python checks, 14 planner Rust tests, three settings
 Rust tests and the compiled ARM preference/unlock/mouse regressions pass.
+
+### Native gathering-map icons (11 November 2026)
+
+NRO SHA256: `320ac51bb88477452d63fa2bf4b9a6e969d2501a384077cd8bc3296d91bf1226`.
+The aligned plugin footprint remains 9,109,504 bytes. The isolated eight-plugin
+stack, including KatLib, totals 11,993,088 bytes and leaves 524,288 bytes after
+64 KiB loader headroom in the shared 12 MiB region.
+
+The native `sPop` manager supplies bounded, available gathering records for the
+whole quest map. Its own map classes project their positions. Independent item
+sprites attach below the map's existing parent; no player, monster or trap slot
+is reused. Native layout cleanup clears the bounded caches, and each mutation
+checks that an animation ID still resolves to the owned object and parent.
+Unknown point kinds use a validated native drop list or forced item. The icon
+represents a point type or likely item, not a guaranteed next drop.
+
+- Eight new Rust tests cover availability, unlimited points, record identity,
+  invalid positions, icon kinds and bounded drop-list decoding.
+- The compiled ARM callback test covers both native hooks, fingerprint checks,
+  points in multiple rooms, sprite creation/properties/projection, reuse,
+  depletion/toggle, foreign ID ownership, invalid pools, generic honey drops,
+  resource bounds and cleanup with reused layout addresses.
+- All 53 Python cases ran, with one existing optional-input skip. Mouse
+  ownership, inline physical search and wishlist-removal ARM suites also pass.
+- Native projection instructions were executed in isolation for whole and
+  enlarged maps; only the whole-map stage-coordinate lookup was stubbed.
+
+A private copy of the current Windows game ran under Wine on a headless
+display, muted at 30 FPS with physical controllers blocked. Map Assist and
+KatLib were active with Compendium before and after Map Assist in load order.
+Its Bulldrome marker remained visible while gathering sprites were drawn.
+Map Assist explicitly identified the new 12-by-12 sprites as non-markers.
+
+The final Ruined Pinnacle quest had 52 eligible native points and 52 shown
+sprites, including a honey node whose native list is 85% Honey. Toggling hid
+and restored the same pool. Controlled changes to that copied process's honey
+availability hid its icon and restoration brought it back; this was not a
+natural collection test. The native sprite size, texture and UVs persisted
+across hundreds of frames. The game's normal menu zoom produced three
+current-area icons, and abandoning the quest cleared every cached map.
+Reentering the quest in the same process rebuilt 52 icons without accumulation;
+the reentry used the native selector/depart request in the private process.
+
+The existing World Sharpness Gauge fingerprint warning also occurred with
+the pinned old Compendium when KatLib was added. Neither new gathering hook
+appears in that mod's checked-function list. This baseline conflict is not
+represented as fixed, and KatLib was not installed into the user's main game.
+The user's running game received no input or memory writes. Private evidence
+is retained under ignored `build/gather-map/`; no saves or captured memory are
+distributed. Physical Windows and every map/rank combination remain untested.
+An ordinary walking transition between areas was not exercised.
