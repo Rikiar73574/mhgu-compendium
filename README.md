@@ -30,7 +30,10 @@ quantities and rates. Items can list both monster drops and quest rewards.
   Nothing is selected initially. Close the checklist to keep playing with only
   matching spots marked across the whole map. Depleted or inactive points
   disappear. Map Assist keeps its own monster markers; these icons need no KatLib.
-  The two mining-point types use grey and gold native pickaxe icons.
+  The two mining-point types use grey and gold native pickaxe icons. Markers
+  are larger, and crowded spots form compact groups with a little edge overlap,
+  without combining or hiding any selected spot. Map numbers and visible stock
+  markers keep clear space.
 - Xbox B selects; Xbox A goes back. LB/RB changes section.
 - MHGURecomp 0.15.4 or later keeps the mouse free while browsing. Clicking the
   Compendium does not capture it; Escape retains the game's mouse-release shortcut.

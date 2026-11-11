@@ -33,6 +33,7 @@ IPL,PAYLOAD=HEAP+0xc000,HEAP+0xd000
 put(MAIN+0x188ca48,GC);u.mem_write(GC+0x4c,b'\xff')
 put(MAIN+0x188ad90,SQ);put(SQ+0xa4,QD);put(SQ+0xe0,207);put(QD+8,207)
 put(UI+0x24,LAYOUT);put(UI+0xcc,MAP);put(UI+0xd0,2);put(UI+0xd4,0)
+u.mem_write(UI+0x4c,b'\xff'*128)
 put(MAP,VTABLE);put(VTABLE+0x64,MAIN+0x61bda8);put(VTABLE+0x6c,MAIN+0x61bde8)
 put(MAIN+0x1889ec0,POP);put(POP,MAIN+0x17524cc);put(POP+0x24,POOL)
 put(POP+0x20,IPL);put(IPL,MAIN+0x175245c);put(IPL+0x64,PAYLOAD);put(IPL+0x68,12)
@@ -62,9 +63,9 @@ def native(uc,at,size,ctx):
   objects[r[0],result]=obj;put(obj+0x68,parents[r[0]]);put(obj+0xd8,obj+0x200);put(obj+0x204,obj+0x300)
   created.append((r[0],result,obj))
  elif at==MAIN+0x546f48:
-  assert r[2:]==[1,3],('item atlas',r);mutations.append(('texture',r[0],r[1],r[3]))
+  assert r[2:]==[1,2],('common item atlas, not map-marker atlas',r);mutations.append(('texture',r[0],r[1],r[3]))
  elif at==MAIN+0xa4fbf4:
-  assert [f32(r[1]),f32(r[1]+4)]==[12.,12.],'sprite dimensions'
+  assert [f32(r[1]),f32(r[1]+4)]==[18.,18.],'readable sprite dimensions'
   assert any(r[0]==obj+0x300 for _,_,obj in created),'foreign sprite resized'
  elif at==MAIN+0x546e84:
   assert r[2]==50,'sprite priority';mutations.append(('priority',r[0],r[1],r[2]))
@@ -74,7 +75,7 @@ def native(uc,at,size,ctx):
   item,ident=get(r[0]+4),get(r[0]+8);assert get(r[0]+16)==1
   items.append((ident,item));mutations.append(('item',get(UI+0x24),ident,item))
  elif at==MAIN+0x545b78:
-  position=struct.unpack('<4f',u.mem_read(r[2],16));positions.append((r[0],r[1],position));mutations.append(('position',r[0],r[1],position))
+  position=struct.unpack('<2f',u.mem_read(r[2],8));positions.append((r[0],r[1],position));mutations.append(('position',r[0],r[1],position))
  elif at==MAIN+0x54533c:mutations.append(('show',r[0],r[1],r[2]))
  elif at==MAIN+0x61bda8:
   assert r[0]==MAP;accepted.append(r[1]);result=int(r[1]<=12)
@@ -107,7 +108,7 @@ select(4,271);select(0,318);update()
 assert len(created)==2,created
 assert items==[(1000,271),(1001,57)],items
 assert set(accepted)=={1,7},'whole-map gathering incorrectly filters the current area'
-assert positions[:2]==[(LAYOUT,1000,(114.,70.,0.,1.)),(LAYOUT,1001,(709.,373.,0.,1.))],positions
+assert positions[:2]==[(LAYOUT,1000,(105.,61.)),(LAYOUT,1001,(700.,364.))],positions
 assert originals==[UI,UI,UI],'native update did not execute before overlay'
 update();assert len(created)==2 and len(items)==2,'second frame reallocated sprites'
 # A respawned mining point may switch type in the same slot. Repaint with the
@@ -116,6 +117,21 @@ put(POOL+0x80+0x68,10);update()
 assert len(created)==2 and items[-1]==(1001,59),'gold mining point retained grey pickaxe'
 put(POOL+0x80+0x68,9);update()
 assert len(created)==2 and items[-1]==(1001,57),'normal mining point retained gold pickaxe'
+# Two different spot types at the same projected position must BOTH remain
+# visible. The first stays anchored; only the overlapping icon moves aside.
+u.mem_write(POOL+0x80+4,struct.pack('<3f',10.,20.,30.));u.mem_write(POOL+0x80+0x55,b'\1');update()
+placed=[p[2]for p in positions[-2:]]
+assert placed[0]==(105.,61.) and (abs(placed[0][0]-placed[1][0])>=16 or abs(placed[0][1]-placed[1][1])>=16),placed
+assert len(created)==2,'spreading recreated/merged a native point'
+u.mem_write(POOL+0x80+4,struct.pack('<3f',-40.,50.,60.));u.mem_write(POOL+0x80+0x55,b'\7');update()
+assert positions[-1][2]==(700.,364.),'an uncrowded marker did not return to its true position'
+# Native marker positions are reserved, never modified or reused for gathering.
+stock=HEAP+0xe100;objects[LAYOUT,2000]=stock;put(stock+0x54,3);put(stock+0x68,PARENT);put(UI+0x4c,2000)
+u.mem_write(stock+0x90,struct.pack('<4f',709.,373.,0.,1.));update()
+p=positions[-1][2];assert abs(p[0]+9.-709.)>=29 or abs(p[1]+9.-373.)>=29,p
+put(stock+0x54,1);update();assert positions[-1][2]==(700.,364.),'an invisible stock marker reserved space'
+put(UI+0x4c,0xffffffff);update();assert positions[-1][2]==(700.,364.)
+assert not [m for m in mutations if m[2]==2000],'native marker was mutated'
 # Only the depleted node is hidden; unrelated stock markers are never written.
 u.mem_write(POOL+0x4e,b'\0\0');start=len(mutations);update()
 assert [m for m in mutations[start:] if m[0]=='show']==[('show',LAYOUT,1000,0)]

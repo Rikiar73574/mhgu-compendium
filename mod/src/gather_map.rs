@@ -74,9 +74,10 @@ unsafe fn create(map:&mut Map,slot:usize,item:u16,ui:u32)->bool{unsafe{
   *icon=Icon{id,object,item:0,shown:false};
   let parts=read(object,0xd8);let sprite=if valid(parts,8){read(parts,4)}else{0};
   if !valid(sprite,0x108){call3(0x74533c,map.layout,id,0);icon.item=u16::MAX;return false;}
-  // Item atlas, a smaller real quad, and a priority below player/monster markers.
-  call4(0x746f48,map.layout,id,1,3);
-  let size=[12.0f32,12.0];call2(0xc4fbf4,sprite,size.as_ptr()as u32);
+  // map_icon.gui ID2 is the common item atlas; ID3 is the stock map-marker
+  // atlas and cannot be combined with cItemIconForHud's item UV coordinates.
+  call4(0x746f48,map.layout,id,1,2);
+  let size=[crate::gather_layout::SIZE;2];call2(0xc4fbf4,sprite,size.as_ptr()as u32);
   call3(0x746e84,map.layout,id,50);
  }
  if icon.item==u16::MAX||!owns(map.layout,map.parent,icon){return false;}
@@ -101,6 +102,7 @@ unsafe fn create(map:&mut Map,slot:usize,item:u16,ui:u32)->bool{unsafe{
  let pool=read(pop,0x24);if !valid(pool,0x80*gather::CAPACITY as u32){hide(map);return;}
  let accepts:unsafe extern "C" fn(u32,u32)->u32=mem::transmute(read(table,0x64));
  let project:unsafe extern "C" fn(u32,*const f32,*mut f32,u32)=mem::transmute(project);
+ let mut positions=[[0.;2];gather::CAPACITY];let mut slots=[0usize;gather::CAPACITY];let mut items=[0u16;gather::CAPACITY];let mut count=0;
  for slot in 0..gather::CAPACITY{
   let node=pool+slot as u32*0x80;
   let mut raw=[0u8;0x80];ptr::copy_nonoverlapping(node as *const u8,raw.as_mut_ptr(),raw.len());
@@ -112,13 +114,30 @@ unsafe fn create(map:&mut Map,slot:usize,item:u16,ui:u32)->bool{unsafe{
   });
   if let (Some(point),Some(item))=(point,item){
    let mut position=[0.0f32;4];project(object,point.pos.as_ptr(),position.as_mut_ptr(),point.area as u32);
-   if position[..2].iter().all(|v|v.is_finite()&&v.abs()<100000.0)&&create(map,slot,item,ui){
-    let icon=&mut map.icons[slot];call3(0x745b78,layout,icon.id,position.as_ptr()as u32);
-    if !icon.shown{call3(0x74533c,layout,icon.id,1);icon.shown=true;}continue;
+   if position[..2].iter().all(|v|v.is_finite()&&v.abs()<100000.0){
+    positions[count]=[position[0],position[1]];slots[count]=slot;items[count]=item;count+=1;
    }
   }
-  hide_icon(layout,map.parent,&mut map.icons[slot]);
  }
+ let labels=if read(table,0x6c)==address(0x81bde8){crate::context::stage().and_then(|s|crate::map_labels::BOUNDS.get(s as usize)).copied().unwrap_or(&[])}else{&[]};
+ let mut reserved=[[0.;4];64];reserved[..labels.len()].copy_from_slice(labels);let mut occupied=labels.len();
+ let parent=call2(0x744fe8,layout,map.parent);
+ // Keep the game's player/monster/trap markers clear too. Its own position
+ // getter (0x745a04) returns this same local animation vector at +0x90.
+ for i in 0..32{let id=read(ui,0x4c+i*4);if id==NONE{continue;}
+  let marker=call2(0x744fe8,layout,id);if !valid(marker,0xa0)||read(marker,0x54)&3!=3||read(marker,0x68)!=parent{continue;}
+  let x=f32::from_bits(read(marker,0x90));let y=f32::from_bits(read(marker,0x94));
+  if x.is_finite()&&y.is_finite()&&x.abs()<100000.&&y.abs()<100000.{reserved[occupied]=[x-18.,y-18.,x+18.,y+18.];occupied+=1;}
+ }
+ crate::gather_layout::spread(&mut positions[..count],&reserved[..occupied]);
+ let mut shown=[false;gather::CAPACITY];
+ for i in 0..count{let slot=slots[i];if create(map,slot,items[i],ui){
+  // Native item quads use a top-left origin; the layout works in centres.
+  let half=crate::gather_layout::SIZE/2.;let position=[positions[i][0]-half,positions[i][1]-half];
+  let icon=&mut map.icons[slot];call3(0x745b78,layout,icon.id,position.as_ptr()as u32);
+  if !icon.shown{call3(0x74533c,layout,icon.id,1);icon.shown=true;}shown[slot]=true;
+ }}
+ for slot in 0..gather::CAPACITY{if !shown[slot]{hide_icon(layout,map.parent,&mut map.icons[slot]);}}
 }}
 pub fn install(){unsafe{
  // Check every native entry used here before installing either callback.

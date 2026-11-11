@@ -221,3 +221,40 @@ the latter checks grey/gold changes in a reused slot without a new allocation.
 Checklist, native Start-menu and packaging regressions also pass. The aligned
 plugin footprint remains 9,175,040 bytes. Other maps/ranks and physical Windows
 were not retested for this change.
+
+### Gathering marker readability (11 November 2026)
+
+The earlier mining-colour check verified palette and UV values but missed the
+texture binding: map_icon.gui texture ID 3 is the map-marker atlas, whereas
+cItemIconForHud supplies common-item coordinates. Texture ID 2 binds the common
+item atlas. This fixes the incorrect mining symbol; checking a source icon sheet
+alone did not establish what the game rendered.
+
+Markers now use 18-pixel quads with 16-pixel spacing (two pixels of edge overlap). Every selected point
+retains its own sprite. Only colliding positions move to nearby free space;
+there is no clustering. Whole-map label rectangles are generated from an owned
+dump by tools/map_labels.py; only coordinates are distributed. Visible native
+player/monster/trap sprites also reserve space, without changing their objects.
+Hidden stock sprites do not reserve space. The enlarged map uses its own native
+projection without the whole-map texture's label rectangles.
+
+Six layout cases cover sparse, crowded, fractional and full 128-point pools,
+stable placement, label clearance and coordinate bounds. Compiled ARM tests
+check common-atlas binding, size, distinct overlapping spots, sparse-position
+restoration and visible/hidden stock marker avoidance, alongside existing
+ownership/depletion/lifecycle checks. Checklist, Start-menu, mouse ownership and
+package regressions pass. The aligned plugin footprint remains 9,175,040 bytes.
+
+The isolated copied-save game under Wine with HD UI and Map Assist displayed
+all 52 drawable native gathering points on Ruined Pinnacle HR at 2560x1440,
+including all eight menu categories and eleven distinct representative item
+icons. Each native sprite bound the loaded common-item texture (ID 2), used
+18x18 dimensions and retained their individual sprites.
+Native item quads have a top-left origin; subtracting half the size centres the
+artwork on the position used for label/stock-marker avoidance. Physical Windows,
+every map/rank and special pickup types absent from this quest remain untested.
+
+Following layout feedback, colliding icons use aligned 16-unit steps around
+neighbours rather than independent offsets on each axis. This keeps nearby
+spots together and allows two pixels of edge overlap. Labels and stock markers
+retain their full clearance.
