@@ -258,3 +258,11 @@ Following layout feedback, colliding icons use aligned 16-unit steps around
 neighbours rather than independent offsets on each axis. This keeps nearby
 spots together and allows two pixels of edge overlap. Labels and stock markers
 retain their full clearance.
+
+### Stable markers around actors (11 November 2026)
+
+Removed actor-marker reservations following feedback. Player, monster and trap
+positions no longer affect gathering layout; fixed map labels still reserve
+space. The compiled ARM regression moves a visible stock marker onto, across
+and away from a gathering point and verifies unchanged gathering coordinates,
+with no writes to the stock marker. This replaces the earlier actor avoidance.

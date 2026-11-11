@@ -120,16 +120,8 @@ unsafe fn create(map:&mut Map,slot:usize,item:u16,ui:u32)->bool{unsafe{
   }
  }
  let labels=if read(table,0x6c)==address(0x81bde8){crate::context::stage().and_then(|s|crate::map_labels::BOUNDS.get(s as usize)).copied().unwrap_or(&[])}else{&[]};
- let mut reserved=[[0.;4];64];reserved[..labels.len()].copy_from_slice(labels);let mut occupied=labels.len();
- let parent=call2(0x744fe8,layout,map.parent);
- // Keep the game's player/monster/trap markers clear too. Its own position
- // getter (0x745a04) returns this same local animation vector at +0x90.
- for i in 0..32{let id=read(ui,0x4c+i*4);if id==NONE{continue;}
-  let marker=call2(0x744fe8,layout,id);if !valid(marker,0xa0)||read(marker,0x54)&3!=3||read(marker,0x68)!=parent{continue;}
-  let x=f32::from_bits(read(marker,0x90));let y=f32::from_bits(read(marker,0x94));
-  if x.is_finite()&&y.is_finite()&&x.abs()<100000.&&y.abs()<100000.{reserved[occupied]=[x-18.,y-18.,x+18.,y+18.];occupied+=1;}
- }
- crate::gather_layout::spread(&mut positions[..count],&reserved[..occupied]);
+ // Only fixed map labels reserve space; moving actors never displace a spot.
+ crate::gather_layout::spread(&mut positions[..count],labels);
  let mut shown=[false;gather::CAPACITY];
  for i in 0..count{let slot=slots[i];if create(map,slot,items[i],ui){
   // Native item quads use a top-left origin; the layout works in centres.

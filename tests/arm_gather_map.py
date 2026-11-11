@@ -125,10 +125,12 @@ assert placed[0]==(105.,61.) and (abs(placed[0][0]-placed[1][0])>=16 or abs(plac
 assert len(created)==2,'spreading recreated/merged a native point'
 u.mem_write(POOL+0x80+4,struct.pack('<3f',-40.,50.,60.));u.mem_write(POOL+0x80+0x55,b'\7');update()
 assert positions[-1][2]==(700.,364.),'an uncrowded marker did not return to its true position'
-# Native marker positions are reserved, never modified or reused for gathering.
+# Walking players and moving monsters must not displace gathering icons.
 stock=HEAP+0xe100;objects[LAYOUT,2000]=stock;put(stock+0x54,3);put(stock+0x68,PARENT);put(UI+0x4c,2000)
 u.mem_write(stock+0x90,struct.pack('<4f',709.,373.,0.,1.));update()
-p=positions[-1][2];assert abs(p[0]+9.-709.)>=29 or abs(p[1]+9.-373.)>=29,p
+assert positions[-1][2]==(700.,364.),'a visible stock marker displaced a gathering icon'
+for x,y in [(700.,364.),(0.,0.),(709.,373.)]:
+ u.mem_write(stock+0x90,struct.pack('<4f',x,y,0.,1.));update();assert positions[-1][2]==(700.,364.),'a moving stock marker displaced a gathering icon'
 put(stock+0x54,1);update();assert positions[-1][2]==(700.,364.),'an invisible stock marker reserved space'
 put(UI+0x4c,0xffffffff);update();assert positions[-1][2]==(700.,364.)
 assert not [m for m in mutations if m[2]==2000],'native marker was mutated'
