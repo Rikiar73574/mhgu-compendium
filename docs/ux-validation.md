@@ -169,3 +169,39 @@ The user's running game received no input or memory writes. Private evidence
 is retained under ignored `build/gather-map/`; no saves or captured memory are
 distributed. Physical Windows and every map/rank combination remain untested.
 An ordinary walking transition between areas was not exercised.
+
+### Gathering checklist and native Start entry (11 November 2026)
+
+The quest Start menu now has an additive fourteenth Compendium row on page two.
+The original thirteen rows, help records and native seven-row pagination remain
+intact. Both that entry and Start + Left open the compact checklist. Closing it
+releases input while retaining selected map markers and the passive wishlist HUD.
+
+The catalogue reads the current quest's native drop tables, groups their items
+by point category, combines duplicate item weights and displays per-gather odds
+or a range across spots. It retains a depleted point's previously seen drops.
+Choices start empty and persist while the game is running. The catalogue resets
+on quest identity changes, including different quests on the same map/rank.
+
+- Nine pure Rust cases cover table validation, duplicate weighting, ranges,
+  category partial states, independent item toggles and capacity rollback.
+- Compiled ARM checklist tests cover displayed odds, category/item/all toggles,
+  controller and mouse input, close/reopen, depletion and keyboard Escape.
+- Native Start-hook ARM tests use the real low main base, execute the native
+  pagination setter and verify stock rows/hints, refill/action handling,
+  allocation failures, signature/provenance guards and partial-hook failure.
+  Constructor/init/refill/action bodies are mocked in this suite; native testing
+  below supplies the full lifecycle evidence. The low-base regression caught
+  and fixed a guard which initially rejected the real allocator vtable.
+- The 53 existing Python cases pass with one existing optional-input skip.
+  Compiled marker ownership, mouse ownership, physical inline search and
+  wishlist-removal regressions also pass.
+
+The isolated copied-save Windows game under Wine showed the new native entry,
+opened the checklist through it, and listed 76 category/item choices on Ruined
+Pinnacle HR. Selecting Lightcrystal showed exactly six sprites, matching the six
+native point tables containing that item; the other 46 available points stayed
+hidden. Closing retained those six. Selecting Mining showed thirteen mining
+sprites, and clearing it hid them. Map Assist's Bulldrome marker remained visible.
+The NRO footprint is 9,175,040 bytes, below its 9 MiB budget. This does not expand
+the earlier validation to physical Windows or every map/rank combination.

@@ -262,6 +262,42 @@ pub(super) fn quick_map(u:&mut Ui){
 }
 
 /// Passive hunt HUD: only outstanding wishlist materials available on this map.
+pub(super) fn gather_filters(u:&mut Ui){
+ use super::{gather_menu as menu,gather_filter::CheckState};
+ let size=imgui::get_io().DisplaySize;let s=(size.x/1280.0).min(size.y/720.0)*0.9;
+ if s<=0.0{return;}
+ let c=Canvas{d:imgui::DrawList::foreground(),f:super::game_ui::font(),s,x:(size.x-700.0*s)/2.0,y:(size.y-590.0*s)/2.0,click:desktop::pointer(u),desktop:u.desktop,action:Cell::new(Action::None)};
+ c.rect(0.0,0.0,700.0,590.0,BG);c.frame(0,0.0,0.0,700.0,590.0,u32::MAX);
+ let p=c.v(8.0,6.0);super::game_ui::title(&c.d,[p.x,p.y,684.0*s,38.0*s]);
+ c.text(28.0,14.0,"Compendium",TEXT,23.0);c.hint(608.0,17.0,"A: close",TEXT,16.0);c.hit(594.0,6.0,96.0,35.0,Action::Back);
+ let state=menu::state();let mut title=Text::new();if let Some((loc,rank))=super::context::location(){let _=write!(title,"{} - {}",world::LOCATIONS[loc].name,["LR","HR","GR"][rank as usize]);}c.text(25.0,57.0,title.str(),GOLD,20.0);
+ let checked=state.catalogue.entries().iter().filter(|e|state.selection.selected(e.category,e.item)).count();
+ let mut count=Text::new();let _=write!(count,"{} / {} selected",checked,state.catalogue.entries().len());c.text(25.0,90.0,count.str(),MUTED,16.0);c.text(494.0,90.0,"Chance per gather",MUTED,16.0);
+ let checkbox=|x:f32,y:f32,check:CheckState|{c.rect(x,y,17.0,17.0,0xff080808);c.frame(1,x-2.0,y-2.0,21.0,21.0,0xffddd4c4);match check{CheckState::All=>{c.line(x+3.0,y+8.0,x+7.0,y+13.0,GOLD);c.line(x+7.0,y+13.0,x+15.0,y+3.0,GOLD);},CheckState::Some=>c.rect(x+3.0,y+7.0,11.0,3.0,GOLD),CheckState::None=>{}}};
+ let all=if checked==0{CheckState::None}else if checked==state.catalogue.entries().len(){CheckState::All}else{CheckState::Some};
+ checkbox(28.0,124.0,all);c.text(58.0,121.0,"All gathering",TEXT,19.0);c.hit(20.0,115.0,360.0,31.0,Action::Select(usize::MAX));
+ c.line(22.0,152.0,677.0,152.0,EDGE);
+ let start=state.selected/menu::PAGE*menu::PAGE;
+ for index in start..(start+menu::PAGE).min(state.len){
+  let row=state.rows[index];let y=164.0+(index-start)as f32*26.0;
+  if index==state.selected{c.card(21.0,y-3.0,658.0,26.0,true);}
+  let header=row&menu::HEADER!=0;let x=if header{32.0}else{52.0};checkbox(x,y+1.0,menu::row_check(row));
+  c.hit(22.0,y-3.0,656.0,26.0,Action::Select(index));
+  if header{c.text(x+29.0,y-1.0,menu::CATEGORIES[(row&!menu::HEADER)as usize],GOLD,19.0);}else{
+   let e=&state.catalogue.entries()[row as usize];
+   if let Some(entry)=menu::entry(e.item){if let Some(&icon)=super::ui_pixels::ITEMS.get(entry){c.sprite(icon as usize,x+26.0,y-1.0,23.0);}}
+   c.clip(x+53.0,y-3.0,390.0,26.0);c.text(x+55.0,y-1.0,menu::name(e.item),TEXT,18.0);c.endclip();
+   let mut rate=Text::new();let mut append=|n:u16|{if n%10==0{let _=write!(rate,"{}%",n/10);}else{let _=write!(rate,"{}.{:01}%",n/10,n%10);}};
+   append(e.min_rate);if e.max_rate!=e.min_rate{let _=write!(rate," to ");if e.max_rate%10==0{let _=write!(rate,"{}%",e.max_rate/10);}else{let _=write!(rate,"{}.{:01}%",e.max_rate/10,e.max_rate%10);}}
+   c.text(499.0,y,rate.str(),TEXT,17.0);
+  }
+ }
+ if state.len==0{c.text(30.0,179.0,"Waiting for this map's gathering points...",MUTED,19.0);}
+ c.line(22.0,535.0,677.0,535.0,EDGE);c.hint(26.0,550.0,"D-pad: move     B: checkbox     A: close",TEXT,17.0);
+ let mut page=Text::new();let _=write!(page,"{} / {}",start/menu::PAGE+1,state.len.div_ceil(menu::PAGE).max(1));c.text(596.0,550.0,page.str(),MUTED,17.0);
+ match c.action.get(){Action::Select(index)=>menu::toggle(index),Action::Back=>super::input::close(),_=>{}}
+}
+
 pub(super) fn wish_tracker(loc:usize,rank:u8){
  let size=imgui::get_io().DisplaySize;let s=(size.x/1280.0).min(size.y/720.0);
  let c=Canvas{d:imgui::DrawList::foreground(),f:super::game_ui::font(),s,x:(size.x-1280.0*s)/2.0,y:(size.y-720.0*s)/2.0,click:None,desktop:false,action:Cell::new(Action::None)};

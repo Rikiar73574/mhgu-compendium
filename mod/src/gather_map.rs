@@ -43,6 +43,22 @@ unsafe fn drop_rows(pop:u32,node:u32)->Option<&'static [u8]>{unsafe{
  let data=read(node,0x38);if data<start||data>=start+size||data&3!=0{return None;}
  Some(core::slice::from_raw_parts(data as *const u8,(start+size-data).min(256)as usize))
 }}
+/// Borrowed rows are consumed on the game thread and never retained by callers.
+pub fn visit(mut f:impl FnMut(&gather::Point,u32,Option<&[u8]>)) -> bool {unsafe{
+ if !ENABLED||crate::context::location().is_none(){return false;}
+ let pop=read(address(0x1a89ec0),0);
+ if !valid(pop,0xe8)||read(pop,0)!=address(0x19524cc){return false;}
+ let pool=read(pop,0x24);if !valid(pool,0x80*gather::CAPACITY as u32){return false;}
+ for slot in 0..gather::CAPACITY{
+  let node=pool+slot as u32*0x80;let mut raw=[0;0x80];
+  ptr::copy_nonoverlapping(node as *const u8,raw.as_mut_ptr(),raw.len());
+  // Keep a respawning point's possible drops in the menu, even while unavailable.
+  if raw[0x70]&3!=3{continue;}
+  raw[0x70]&=!4;raw[0x5c..0x60].fill(0);raw[0x4e..0x50].copy_from_slice(&1u16.to_le_bytes());
+  if let Some(point)=gather::point(&raw,address(0x19523e0)){f(&point,read(node,0x64),drop_rows(pop,node));}
+ }
+ true
+}}
 unsafe fn map_for(layout:u32,parent:u32,resource:u32)->Option<&'static mut Map>{unsafe{
  let maps=&mut *(&raw mut MAPS);
  let index=maps.iter().position(|m|m.layout==layout&&m.parent==parent&&m.resource==resource).or_else(||maps.iter().position(|m|m.layout==0))?;
@@ -90,7 +106,10 @@ unsafe fn create(map:&mut Map,slot:usize,item:u16,ui:u32)->bool{unsafe{
   let mut raw=[0u8;0x80];ptr::copy_nonoverlapping(node as *const u8,raw.as_mut_ptr(),raw.len());
   let point=gather::point(&raw,address(0x19523e0));
   let point=point.filter(|p|accepts(object,p.area as u32)!=0);
-  let item=point.as_ref().and_then(|p|gather::icon(p,drop_rows(pop,node)));
+  let item=point.as_ref().and_then(|p|{
+   let rows=drop_rows(pop,node);
+   crate::gather_menu::matches(p,read(node,0x64),rows).then(||gather::icon(p,rows)).flatten()
+  });
   if let (Some(point),Some(item))=(point,item){
    let mut position=[0.0f32;4];project(object,point.pos.as_ptr(),position.as_mut_ptr(),point.area as u32);
    if position[..2].iter().all(|v|v.is_finite()&&v.abs()<100000.0)&&create(map,slot,item,ui){

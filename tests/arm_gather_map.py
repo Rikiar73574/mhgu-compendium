@@ -45,6 +45,7 @@ def set_node(slot,kind,area,xyz,uses=2):
  struct.pack_into('<h',raw,0x4e,uses);raw[0x55]=area;raw[0x70]=3
  struct.pack_into('<I',raw,0x68,kind);u.mem_write(POOL+slot*0x80,bytes(raw))
 set_node(0,11,1,(10.,20.,30.));set_node(1,9,7,(-40.,50.,60.))
+put(POOL+0x38,PAYLOAD);put(POOL+0x80+0x38,PAYLOAD)
 
 def native(uc,at,size,ctx):
  r=[uc.reg_read(reg) for reg in (UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_R3)]
@@ -100,11 +101,14 @@ update=lambda:call(hooks[UPDATE],UI)
 request=lambda value:call(symbols['compendium_gather_request'],value)
 request(0);update();assert not created,'disabled gathering allocated sprites'
 request(1);update()
+assert not created,'no selected items must show no gathering spots'
+select=lambda category,item:call(symbols['compendium_gather_select'],category,item)
+select(4,271);select(0,318);update()
 assert len(created)==2,created
 assert items==[(1000,271),(1001,318)],items
 assert set(accepted)=={1,7},'whole-map gathering incorrectly filters the current area'
 assert positions[:2]==[(LAYOUT,1000,(114.,70.,0.,1.)),(LAYOUT,1001,(709.,373.,0.,1.))],positions
-assert originals==[UI,UI],'native update did not execute before overlay'
+assert originals==[UI,UI,UI],'native update did not execute before overlay'
 update();assert len(created)==2 and len(items)==2,'second frame reallocated sprites'
 # Only the depleted node is hidden; unrelated stock markers are never written.
 u.mem_write(POOL+0x4e,b'\0\0');start=len(mutations);update()

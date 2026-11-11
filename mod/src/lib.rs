@@ -1,5 +1,5 @@
 #![no_std]
-mod gather;mod gather_map;
+mod gather;mod gather_map;mod gather_filter;mod gather_menu;mod start_menu;
 mod settings;mod storage;mod editor;mod game_ui;mod game_ui_data{include!(concat!(env!("OUT_DIR"),"/game_ui.rs"));}mod quest;mod quest_data {include!(concat!(env!("OUT_DIR"),"/quest_data.rs"));}mod search;mod armor_preview;mod armor;mod armor_data { include!(concat!(env!("OUT_DIR"),"/armor_data.rs")); }mod quick_map;mod inventory;mod wishlist;mod native_hint;mod smithy;mod item;mod item_data { include!(concat!(env!("OUT_DIR"),"/item_data.rs")); }mod ui_art;mod ui_pixels { include!(concat!(env!("OUT_DIR"),"/ui_pixels.rs")); }mod weapon;mod weapon_data { include!(concat!(env!("OUT_DIR"),"/weapon_data.rs")); }mod map_art;mod map_pixels { include!(concat!(env!("OUT_DIR"),"/map_pixels.rs")); }mod layout;mod desktop;mod control;mod input;mod catalog { include!(concat!(env!("OUT_DIR"),"/catalog.rs")); }mod world { include!(concat!(env!("OUT_DIR"),"/world.rs")); }mod context;mod view;
 use core::{cell::UnsafeCell,fmt::{self,Write}};
 use forge::{imgui,input::{Input,Button}};
@@ -14,7 +14,7 @@ struct Text{bytes:[u8;256],len:usize}
 impl Text{fn new()->Self{Self{bytes:[0;256],len:0}}fn str(&self)->&str{core::str::from_utf8(&self.bytes[..self.len]).unwrap_or("")}}
 impl Write for Text{fn write_str(&mut self,s:&str)->fmt::Result{let mut n=s.len().min(256-self.len);while !s.is_char_boundary(n){n-=1;}self.bytes[self.len..self.len+n].copy_from_slice(&s.as_bytes()[..n]);self.len+=n;Ok(())}}
 #[unsafe(no_mangle)]pub extern "C" fn forge_onLoad(p:*mut forge::sys::init::PluginInitParams){unsafe{(*p).required_version=forge::REQUIRED_VERSION;let n=b"Hunter's Compendium\0";core::ptr::copy_nonoverlapping(n.as_ptr(),(p as *mut u8).add(6),n.len());}}
-#[unsafe(no_mangle)]pub extern "C" fn forge_onInit(){let _=forge::log::init();if input::install(){native_hint::install();smithy::install();armor_preview::install();gather_map::install();forge::log::prelude::info!("Compendium 0.3 ready: Items / Weapons / Armor / Wishlist / Quest routes");}else{forge::log::prelude::error!("Compendium disabled: HID imports incompatible");}}
+#[unsafe(no_mangle)]pub extern "C" fn forge_onInit(){let _=forge::log::init();if input::install(){native_hint::install();smithy::install();armor_preview::install();gather_map::install();start_menu::install();forge::log::prelude::info!("Compendium 0.3 ready: Items / Weapons / Armor / Wishlist / Quest routes");}else{forge::log::prelude::error!("Compendium disabled: HID imports incompatible");}}
 fn query_match(s:&str,u:&Ui)->bool{
  let mut query=[0;48];let mut n=0;for &b in &u.query[..u.len]{if b.is_ascii_alphanumeric(){query[n]=b.to_ascii_lowercase();n+=1;}}if n==0{return true;}
  let mut hay=[0u8;256];let mut len=0;for &b in s.as_bytes(){if b.is_ascii_alphanumeric()&&len<hay.len(){hay[len]=b.to_ascii_lowercase();len+=1;}}
@@ -54,11 +54,13 @@ fn activate(u:&mut Ui){
  let(lx,ly)=Input::get_stick_l();if lx< -0.5{b|=1<<12;}if lx>0.5{b|=1<<14;}if ly>0.5{b|=1<<13;}if ly< -0.5{b|=1<<15;}
  let mut p=b&!u.last;let dt=imgui::get_io().DeltaTime.min(0.1);if b==u.last&&b&0xf000!=0{u.repeat+=dt;if u.repeat>0.4{p|=b&0xf000;u.repeat=0.32;}}else{u.repeat=0.0;}u.last=b;
  if Input::is_key_pressed(forge::input::Key::F6){input::toggle();}
- gather_map::compendium_gather_request(input::open()as u32);
- desktop::mouse_free(input::open()&&context::location().is_none());
- let smith=smithy::frame();if !input::open(){if let Some((node,recipe))=smith{if p&(1<<5)!=0{wishlist::toggle(node,recipe);u.dirty=true;}}u.was_open=false;return;}
+ if start_menu::take_open(){input::show();p=0;}
+ gather_menu::refresh(dt,input::open()&&!u.was_open);
+ gather_map::compendium_gather_request(gather_menu::visible()as u32);
+ desktop::mouse_free(input::open());
+ let smith=smithy::frame();if !input::open(){if let Some((node,recipe))=smith{if p&(1<<5)!=0{wishlist::toggle(node,recipe);u.dirty=true;}}if let Some((loc,rank))=context::location(){if gather_menu::visible(){inventory::refresh(dt,false);wishlist::load();view::wish_tracker(loc,rank);}}u.was_open=false;return;}
  inventory::refresh(dt,!u.was_open);
- if let Some((loc,rank))=context::location(){wishlist::load();u.was_open=true;u.current=Some(loc);view::wish_tracker(loc,rank);return;}
+ if let Some((loc,_))=context::location(){wishlist::load();if !u.was_open{p=0;}u.was_open=true;u.current=Some(loc);imgui::set_next_frame_want_capture_mouse(true);imgui::set_next_frame_want_capture_keyboard(true);gather_menu::input(u,p);if input::open(){view::gather_filters(u);}return;}
  if u.current.take().is_some(){u.was_open=false;}
  if !u.was_open{settings::load();u.was_open=true;wishlist::load();if u.planner{quest::start();}u.quick_map=false;u.current=None;if let Some((loc,rank))=context::location(){u.tab=2;u.location=loc as i16;u.rank=rank;u.zone=0;u.selected=0;u.detail=usize::MAX;u.depth=0;u.typing=false;u.len=0;u.current=Some(loc);u.quick_map=true;u.dirty=true;}p=0;}
  imgui::set_next_frame_want_capture_mouse(true);imgui::set_next_frame_want_capture_keyboard(true);

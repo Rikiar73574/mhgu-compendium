@@ -21,10 +21,13 @@ p.frame({'kind':'key','key':41}) # root Escape closes browser
 assert requests[-1] is False,requests
 p.frame({'kind':'key','key':63});assert requests[-1] is True,requests
 p.frame({'kind':'key','key':63});assert requests[-1] is False,requests
-# A mission has only the passive wishlist tracker; it must not own the pointer.
+# The quest checklist owns input only until it is closed; the retained map HUD
+# then returns mouse ownership to the game.
 p.frame({'kind':'key','key':63});assert requests[-1] is True
 H=n['HEAP'];M=n['MAIN'];put=n['put'];gc=H+0x8000;sq=H+0x8100;qd=H+0x8300
 put(M+0x188ca48,gc);n['u'].mem_write(gc+0x4c,b'\xff');put(M+0x188ad90,sq)
 put(sq+0xa4,qd);put(sq+0xe0,207);put(qd+8,207)
-p.frame();assert requests[-1] is False,'Passive hunt tracker must leave mouse look alone'
-print('ARM mouse ownership: open, Escape, toggle close, idle and passive hunt passed')
+p.frame();assert requests[-1] is True,'Interactive quest checklist needs a free pointer'
+p.frame({'kind':'key','key':41});p.frame()
+assert requests[-1] is False,'Closed checklist must leave mouse look alone'
+print('ARM mouse ownership: browser/quest checklist, Escape, toggle close and passive HUD passed')

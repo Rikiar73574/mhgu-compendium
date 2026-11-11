@@ -23,10 +23,13 @@ quantities and rates. Items can list both monster drops and quest rewards.
 41 internal game entries and 25 explicit data gaps; sources are never guessed.
 
 - Start + D-pad Left opens or closes the Compendium; F6 is the keyboard shortcut.
-- During a quest, that toggle also shows small native gathering icons across the
-  whole map. Honey, mining, bugs and other points use the game's actual positions
-  and availability; depleted or inactive points disappear. Map Assist keeps its
-  own monster markers. Compendium does not require KatLib for these icons.
+- During a quest, open **Compendium** on page two of the native Start menu,
+  or use Start + Left / F6, to filter gathering points. Category and individual
+  item checkboxes list this quest map's drops and their chances. Ranges mean
+  different spots have different odds; quantities do not multiply those odds.
+  Nothing is selected initially. Close the checklist to keep playing with only
+  matching spots marked across the whole map. Depleted or inactive points
+  disappear. Map Assist keeps its own monster markers; these icons need no KatLib.
 - Xbox B selects; Xbox A goes back. LB/RB changes section.
 - MHGURecomp 0.15.4 or later keeps the mouse free while browsing. Clicking the
   Compendium does not capture it; Escape retains the game's mouse-release shortcut.

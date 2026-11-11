@@ -8,6 +8,7 @@ static ORIGINAL:Local<[usize;5]>=Local(UnsafeCell::new([0;5]));
 static READY:core::sync::atomic::AtomicBool=core::sync::atomic::AtomicBool::new(false);
 pub fn ready()->bool{READY.load(core::sync::atomic::Ordering::Relaxed)}
 pub fn open()->bool{unsafe{(*GATE.0.get()).open}}
+pub fn show(){unsafe{(*GATE.0.get()).open=true;}}
 pub fn toggle(){unsafe{let g=&mut *GATE.0.get();if g.open{g.close();}else{g.open=true;}}}
 pub fn close(){unsafe{(*GATE.0.get()).close();}}
 unsafe fn run(i:usize,s:*mut u8,id:*const u32){unsafe{
@@ -16,7 +17,7 @@ unsafe fn run(i:usize,s:*mut u8,id:*const u32){unsafe{
  let f:unsafe extern "C" fn(*mut u8,*const u32)=core::mem::transmute(orig);f(s,id);
  if s.is_null()||id.is_null()||ptr::read_unaligned(id)!=0{return;}
  let b=ptr::read_unaligned(s.add(8).cast::<u32>());
- let gate=&mut *GATE.0.get();gate.passive=super::context::location().is_some();let was_capture=gate.capturing();let out=gate.filter(b);
+ let gate=&mut *GATE.0.get();let was_capture=gate.capturing();let out=gate.filter(b);
  ptr::write_unaligned(s.add(8).cast::<u32>(),out);
  // Clear both sticks, high button bits and every action while capturing/draining.
  if was_capture||gate.capturing() {ptr::write_bytes(s.add(12),0,20);}
